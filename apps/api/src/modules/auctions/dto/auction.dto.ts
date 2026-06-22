@@ -1,5 +1,5 @@
 import { IsBoolean, IsEnum, IsNumber, IsOptional, IsString } from 'class-validator';
-import { Prisma } from '@prisma/client';
+import { AuctionStatus, BidStrategy } from '@prisma/client';
 
 export class CreateAuctionDto {
   @IsString()
@@ -10,12 +10,12 @@ export class CreateAuctionDto {
   externalId?: string;
 
   @IsOptional()
-  @IsEnum(Prisma.AuctionStatus)
-  status?: Prisma.AuctionStatus;
+  @IsEnum(AuctionStatus)
+  status?: AuctionStatus;
 
   @IsOptional()
-  @IsEnum(Prisma.BidStrategy)
-  strategy?: Prisma.BidStrategy;
+  @IsEnum(BidStrategy)
+  strategy?: BidStrategy;
 
   @IsOptional()
   @IsNumber()
@@ -36,12 +36,12 @@ export class CreateAuctionDto {
 
 export class UpdateAuctionDto {
   @IsOptional()
-  @IsEnum(Prisma.AuctionStatus)
-  status?: Prisma.AuctionStatus;
+  @IsEnum(AuctionStatus)
+  status?: AuctionStatus;
 
   @IsOptional()
-  @IsEnum(Prisma.BidStrategy)
-  strategy?: Prisma.BidStrategy;
+  @IsEnum(BidStrategy)
+  strategy?: BidStrategy;
 
   @IsOptional()
   @IsBoolean()
