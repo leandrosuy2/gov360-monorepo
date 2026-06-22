@@ -1,19 +1,29 @@
-import { existsSync } from "node:fs";
 import { spawnSync } from "node:child_process";
-import { join } from "node:path";
+import { createRequire } from "node:module";
+import { join, resolve } from "node:path";
+import { pathToFileURL } from "node:url";
 
 const root = join(import.meta.dirname, "../..");
+const require = createRequire(join(root, "package.json"));
 const pnpmVersion = "9.15.9";
 
-function workspaceDepsInstalled() {
-  const markers = [
-    join(root, "node_modules/@nestjs/common/package.json"),
-    join(root, "apps/api/node_modules/@nestjs/common/package.json"),
-    join(root, "node_modules/next/package.json"),
-    join(root, "apps/web/node_modules/next/package.json"),
-  ];
+const requiredPackages = [
+  "@gov360/typescript-config",
+  "@nestjs/common",
+  "reflect-metadata",
+];
 
-  return markers.some(existsSync);
+function hasPackage(name) {
+  try {
+    require.resolve(`${name}/package.json`);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export function workspaceDepsInstalled() {
+  return requiredPackages.every(hasPackage);
 }
 
 function run(command, args) {
@@ -40,12 +50,37 @@ function installWithPnpm() {
   return result;
 }
 
-if (!workspaceDepsInstalled()) {
+export function ensureDeps() {
+  if (workspaceDepsInstalled()) {
+    return 0;
+  }
+
+  if (process.env.GOV360_INSTALLING === "1") {
+    return 0;
+  }
+
   console.log("[gov360] Dependências do monorepo ausentes. Executando pnpm install...");
 
+  process.env.GOV360_INSTALLING = "1";
   const result = installWithPnpm();
+  delete process.env.GOV360_INSTALLING;
 
   if (result.status !== 0) {
-    process.exit(result.status ?? 1);
+    return result.status ?? 1;
   }
+
+  if (!workspaceDepsInstalled()) {
+    console.error("[gov360] pnpm install concluiu, mas pacotes do workspace ainda estão ausentes.");
+    return 1;
+  }
+
+  return 0;
+}
+
+const isDirectRun =
+  process.argv[1] &&
+  import.meta.url === pathToFileURL(resolve(process.argv[1])).href;
+
+if (isDirectRun) {
+  process.exit(ensureDeps());
 }
