@@ -1,19 +1,5 @@
-// Local enum definitions mirroring Prisma enums to avoid import issues
-export enum AuctionStatus {
-  SCHEDULED = "SCHEDULED",
-  ACTIVE = "ACTIVE",
-  PAUSED = "PAUSED",
-  FINISHED = "FINISHED",
-  CANCELED = "CANCELED",
-}
-
-export enum BidStrategy {
-  AGGRESSIVE = "AGGRESSIVE",
-  MODERATE = "MODERATE",
-  CONSERVATIVE = "CONSERVATIVE",
-}
-
-import { IsBoolean, IsEnum, IsNumber, IsOptional, IsString } from "class-validator";
+import { IsBoolean, IsEnum, IsNumber, IsOptional, IsString } from 'class-validator';
+import { Prisma } from '@prisma/client';
 
 export class CreateAuctionDto {
   @IsString()
@@ -24,12 +10,12 @@ export class CreateAuctionDto {
   externalId?: string;
 
   @IsOptional()
-  @IsEnum(AuctionStatus)
-  status?: AuctionStatus;
+  @IsEnum(Prisma.AuctionStatus)
+  status?: Prisma.AuctionStatus;
 
   @IsOptional()
-  @IsEnum(BidStrategy)
-  strategy?: BidStrategy;
+  @IsEnum(Prisma.BidStrategy)
+  strategy?: Prisma.BidStrategy;
 
   @IsOptional()
   @IsNumber()
@@ -50,12 +36,12 @@ export class CreateAuctionDto {
 
 export class UpdateAuctionDto {
   @IsOptional()
-  @IsEnum(AuctionStatus)
-  status?: AuctionStatus;
+  @IsEnum(Prisma.AuctionStatus)
+  status?: Prisma.AuctionStatus;
 
   @IsOptional()
-  @IsEnum(BidStrategy)
-  strategy?: BidStrategy;
+  @IsEnum(Prisma.BidStrategy)
+  strategy?: Prisma.BidStrategy;
 
   @IsOptional()
   @IsBoolean()
