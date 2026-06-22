@@ -26,10 +26,6 @@ function resolvePackageBin(packageName, binKey) {
   const relative =
     typeof bin === "string" ? bin : bin[binKey ?? Object.keys(bin)[0]];
 
-  if (!relative) {
-    throw new Error(`Binário "${binKey}" não encontrado em "${packageName}".`);
-  }
-
   return join(dirname(pkgJsonPath), relative);
 }
 
@@ -59,6 +55,15 @@ function run(label, command, args, cwd) {
   return child;
 }
 
+function runLocalOrNpx(label, packageName, binKey, localArgs, npxPackage, npxArgs, cwd) {
+  try {
+    const bin = resolvePackageBin(packageName, binKey);
+    run(label, process.execPath, [bin, ...localArgs], cwd);
+  } catch {
+    run(label, "npx", ["--yes", npxPackage, ...npxArgs], cwd);
+  }
+}
+
 function shutdown() {
   for (const child of children) {
     if (!child.killed) child.kill();
@@ -68,19 +73,10 @@ function shutdown() {
 process.on("SIGTERM", shutdown);
 process.on("SIGINT", shutdown);
 
-try {
-  if (isProd) {
-    run("api", process.execPath, [apiDist], apiDir);
-    const nextBin = resolvePackageBin("next", "next");
-    run("web", process.execPath, [nextBin, "start", "-p", webPort], webDir);
-  } else {
-    const nestBin = resolvePackageBin("@nestjs/cli", "nest");
-    const nextBin = resolvePackageBin("next", "next");
-    run("api", process.execPath, [nestBin, "start", "--watch"], apiDir);
-    run("web", process.execPath, [nextBin, "dev"], webDir);
-  }
-} catch (error) {
-  console.error(error instanceof Error ? error.message : error);
-  console.error("Execute `npm install` na raiz do projeto antes de `npm start`.");
-  process.exit(1);
+if (isProd) {
+  run("api", process.execPath, [apiDist], apiDir);
+  runLocalOrNpx("web", "next", "next", ["start", "-p", webPort], "next@15", ["start", "-p", webPort], webDir);
+} else {
+  runLocalOrNpx("api", "tsx", "tsx", ["watch", "src/main.ts"], "tsx@4", ["watch", "src/main.ts"], apiDir);
+  runLocalOrNpx("web", "next", "next", ["dev"], "next@15", ["dev"], webDir);
 }

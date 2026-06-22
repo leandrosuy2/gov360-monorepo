@@ -7,9 +7,10 @@
   ],
   "scripts": {
     "dev": "node tooling/scripts/dev.mjs",
+    "prestart": "node tooling/scripts/ensure-deps.mjs",
     "start": "node tooling/scripts/start.mjs",
     "build": "turbo build",
-    "postinstall": "prisma generate",
+    "postinstall": "node tooling/scripts/postinstall.mjs",
     "lint": "turbo lint",
     "typecheck": "turbo typecheck",
     "clean": "node tooling/scripts/clean.mjs",
@@ -17,19 +18,18 @@
     "db:migrate": "prisma migrate dev",
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",
-    "prepare": "husky"
+    "prepare": "node tooling/scripts/prepare.mjs"
   },
   "dependencies": {
-    "@nestjs/cli": "^11.0.4",
     "@prisma/client": "^6.10.1",
     "bcrypt": "^6.0.0",
-    "next": "^15.3.4"
+    "next": "^15.3.4",
+    "tsx": "^4.20.3"
   },
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",
     "husky": "^9.1.7",
     "prisma": "^6.10.1",
-    "tsx": "^4.20.3",
     "turbo": "^2.5.4",
     "typescript": "^5.8.3"
   },
