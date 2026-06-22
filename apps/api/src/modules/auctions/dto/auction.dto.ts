@@ -1,4 +1,4 @@
-import { Prisma, AuctionStatus, BidStrategy } from "@prisma/client";
+import { AuctionStatus, BidStrategy } from "@prisma/client";
 import { IsBoolean, IsEnum, IsNumber, IsOptional, IsString } from "class-validator";
 
 export class CreateAuctionDto {
