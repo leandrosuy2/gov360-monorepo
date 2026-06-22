@@ -4,26 +4,31 @@ import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 
 const root = join(import.meta.dirname, "../..");
-const require = createRequire(join(root, "package.json"));
 const pnpmVersion = "9.15.9";
 
-const requiredPackages = [
-  "@gov360/typescript-config",
-  "@nestjs/common",
-  "reflect-metadata",
-];
-
-function hasPackage(name) {
+function canResolve(requireFn, name) {
   try {
-    require.resolve(`${name}/package.json`);
+    requireFn.resolve(name);
     return true;
   } catch {
-    return false;
+    try {
+      requireFn.resolve(`${name}/package.json`);
+      return true;
+    } catch {
+      return false;
+    }
   }
 }
 
 export function workspaceDepsInstalled() {
-  return requiredPackages.every(hasPackage);
+  const apiRequire = createRequire(join(root, "apps/api/package.json"));
+  const webRequire = createRequire(join(root, "apps/web/package.json"));
+
+  return (
+    canResolve(apiRequire, "@nestjs/common") &&
+    canResolve(apiRequire, "reflect-metadata") &&
+    canResolve(webRequire, "@gov360/typescript-config")
+  );
 }
 
 function run(command, args) {
@@ -37,10 +42,7 @@ function pnpmMissing(result) {
 function installWithPnpm() {
   run("corepack", ["enable"]);
 
-  let result = run("pnpm", ["install", "--frozen-lockfile"]);
-  if (result.status !== 0 && !pnpmMissing(result)) {
-    result = run("pnpm", ["install"]);
-  }
+  let result = run("pnpm", ["install"]);
 
   if (pnpmMissing(result) || result.status !== 0) {
     console.log(`[gov360] Tentando pnpm@${pnpmVersion} via npx...`);

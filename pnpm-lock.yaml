@@ -24,9 +24,6 @@ importers:
       prisma:
         specifier: ^6.10.1
         version: 6.19.3(typescript@5.9.3)
-      tsx:
-        specifier: ^4.20.3
-        version: 4.22.4
       turbo:
         specifier: ^2.5.4
         version: 2.9.18
@@ -7208,6 +7205,7 @@ snapshots:
       '@esbuild/win32-arm64': 0.28.1
       '@esbuild/win32-ia32': 0.28.1
       '@esbuild/win32-x64': 0.28.1
+    optional: true
 
   escalade@3.2.0: {}
 
@@ -9583,6 +9581,7 @@ snapshots:
       esbuild: 0.28.1
     optionalDependencies:
       fsevents: 2.3.3
+    optional: true
 
   turbo@2.9.18:
     optionalDependencies:

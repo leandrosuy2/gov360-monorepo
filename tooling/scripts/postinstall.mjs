@@ -25,4 +25,8 @@ try {
   console.warn("[gov360] prisma não instalado; pulando prisma generate.");
 }
 
-process.exit(ensureDeps());
+if (process.env.GOV360_INSTALLING !== "1") {
+  process.exit(ensureDeps());
+}
+
+process.exit(0);
