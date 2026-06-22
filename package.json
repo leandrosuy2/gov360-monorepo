@@ -5,7 +5,7 @@
     "dev": "node tooling/scripts/dev.mjs",
     "prestart": "node tooling/scripts/ensure-deps.mjs && node tooling/scripts/build.mjs",
     "start": "node tooling/scripts/start.mjs",
-    "build": "turbo build",
+    "build": "prisma generate && turbo build",
     "postinstall": "node tooling/scripts/postinstall.mjs",
     "lint": "turbo lint",
     "typecheck": "turbo typecheck",
@@ -18,12 +18,12 @@
   },
   "dependencies": {
     "@prisma/client": "^6.10.1",
-    "bcrypt": "^6.0.0"
+    "bcrypt": "^6.0.0",
+    "prisma": "^6.10.1"
   },
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",
     "husky": "^9.1.7",
-    "prisma": "^6.10.1",
     "turbo": "^2.5.4",
     "typescript": "^5.8.3"
   },

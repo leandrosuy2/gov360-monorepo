@@ -13,11 +13,11 @@ function runPnpm(args) {
     CI: "false",
   };
 
-  let result = spawnSync("pnpm", args, { cwd: root, stdio: "inherit", env });
+  let result = spawnSync("pnpm", args, { cwd: root, stdio: "inherit", env, shell: true });
 
   if (result.error?.code === "ENOENT") {
-    spawnSync("corepack", ["enable"], { cwd: root, stdio: "inherit" });
-    result = spawnSync("pnpm", args, { cwd: root, stdio: "inherit", env });
+    spawnSync("corepack", ["enable"], { cwd: root, stdio: "inherit", shell: true });
+    result = spawnSync("pnpm", args, { cwd: root, stdio: "inherit", env, shell: true });
   }
 
   if (result.error?.code === "ENOENT") {
@@ -25,6 +25,7 @@ function runPnpm(args) {
       cwd: root,
       stdio: "inherit",
       env,
+      shell: true,
     });
   }
 
@@ -38,7 +39,12 @@ if (existsSync(apiDist) && existsSync(nextBuild) && process.env.GOV360_FORCE_BUI
 
 console.log("[gov360] Gerando build de produção...");
 
-const result = runPnpm(["run", "build"]);
+const generate = runPnpm(["exec", "prisma", "generate"]);
+if (generate.status !== 0) {
+  process.exit(generate.status ?? 1);
+}
+
+const result = runPnpm(["exec", "turbo", "build", "--force"]);
 
 if (result.status !== 0) {
   process.exit(result.status ?? 1);
