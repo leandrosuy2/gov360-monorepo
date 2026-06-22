@@ -1,11 +1,10 @@
 import { config as dotenvConfig } from "dotenv";
 import { join } from "node:path";
-
-dotenvConfig({ path: join(root, ".env") });
-import { spawn, spawnSync } from "node:child_process";
-import { join } from "node:path";
+import { existsSync } from "node:fs";
 
 const root = join(import.meta.dirname, "../..");
+
+dotenvConfig({ path: join(root, ".env") });
 const apiDir = join(root, "apps/api");
 const apiDist = join(apiDir, "dist/main.js");
 const nextBuild = join(root, "apps/web/.next/BUILD_ID");
