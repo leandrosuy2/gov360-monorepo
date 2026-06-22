@@ -1,0 +1,35 @@
+{
+  "name": "gov360",
+  "private": true,
+  "scripts": {
+    "dev": "node tooling/scripts/dev.mjs",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "typecheck": "turbo typecheck",
+    "clean": "node tooling/scripts/clean.mjs",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:push": "prisma db push",
+    "db:seed": "tsx prisma/seed.ts",
+    "prepare": "husky"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.10.1",
+    "bcrypt": "^6.0.0"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^5.0.2",
+    "husky": "^9.1.7",
+    "prisma": "^6.10.1",
+    "tsx": "^4.20.3",
+    "turbo": "^2.5.4",
+    "typescript": "^5.8.3"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
+  "packageManager": "pnpm@9.15.9",
+  "engines": {
+    "node": ">=20"
+  }
+}

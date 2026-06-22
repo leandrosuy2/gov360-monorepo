@@ -1,0 +1,655 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ───────────────────────────────────────────────────────────────────
+
+enum UserRole {
+  ADMIN
+  MANAGER
+  ANALYST
+  COMMERCIAL
+  FINANCIAL
+  VIEWER
+}
+
+enum PortalType {
+  FEDERAL
+  MARKET
+  STATE
+  MUNICIPAL
+}
+
+enum OpportunityStatus {
+  NEW
+  ANALYZING
+  APPROVED
+  REJECTED
+  IGNORED
+  FAVORITED
+  CONVERTED
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum TenderStatus {
+  NEW
+  ANALYZING
+  APPROVED
+  REJECTED
+  DOCUMENTATION_PENDING
+  PROPOSAL
+  PARTICIPATING
+  DISPUTE
+  QUALIFICATION
+  APPEAL
+  AWARDED
+  LOST
+  CONTRACTED
+  CLOSED
+}
+
+enum DocumentCategory {
+  CONTRATO_SOCIAL
+  ALTERACAO_CONTRATUAL
+  CARTAO_CNPJ
+  CERTIDAO
+  BALANCO
+  ATESTADO_TECNICO
+  PROCURACAO
+  DECLARACAO
+  CATALOGO
+  CERTIFICACAO
+  EDITAL
+  PROPOSTA
+  OUTRO
+}
+
+enum DocumentStatus {
+  VALID
+  EXPIRING
+  EXPIRED
+  PENDING_REVIEW
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  BLOCKED
+  DONE
+  CANCELED
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum ProposalStatus {
+  DRAFT
+  REVIEW
+  APPROVED
+  SUBMITTED
+  REJECTED
+}
+
+enum BidStrategy {
+  AGGRESSIVE
+  MODERATE
+  CONSERVATIVE
+}
+
+enum AuctionStatus {
+  SCHEDULED
+  ACTIVE
+  PAUSED
+  FINISHED
+  CANCELED
+}
+
+enum ContractStatus {
+  ACTIVE
+  SUSPENDED
+  COMPLETED
+  TERMINATED
+}
+
+enum FinancialStatus {
+  PENDING
+  INVOICED
+  RECEIVED
+  OVERDUE
+}
+
+// ─── Usuários e Segurança ─────────────────────────────────────────────────────
+
+model User {
+  id                    String        @id @default(cuid())
+  email                 String        @unique
+  password              String
+  name                  String
+  role                  UserRole      @default(ANALYST)
+  active                Boolean       @default(true)
+  assignedOpportunities Opportunity[] @relation("OpportunityAssignee")
+  assignedTenders       Tender[]      @relation("TenderAssignee")
+  assignedTasks         Task[]        @relation("TaskAssignee")
+  createdTasks          Task[]        @relation("TaskCreator")
+  auditLogs             AuditLog[]
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+
+  @@map("users")
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  action    String
+  entity    String
+  entityId  String?
+  metadata  Json?
+  ipAddress String?
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  createdAt DateTime @default(now())
+
+  @@index([entity, entityId])
+  @@index([userId, createdAt])
+  @@map("audit_logs")
+}
+
+// ─── Portais e Integrações ───────────────────────────────────────────────────
+
+model Portal {
+  id          String     @id @default(cuid())
+  name        String
+  code        String     @unique
+  type        PortalType
+  baseUrl     String?
+  active      Boolean    @default(true)
+  lastSyncAt  DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@map("portals")
+}
+
+model SearchProfile {
+  id          String   @id @default(cuid())
+  name        String
+  keywords    Json?
+  cnaes       Json?
+  catmats     Json?
+  catser      Json?
+  states      Json?
+  cities      Json?
+  modalities  Json?
+  minValue    Decimal? @db.Decimal(15, 2)
+  maxValue    Decimal? @db.Decimal(15, 2)
+  agencies    Json?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("search_profiles")
+}
+
+model IntegrationLog {
+  id        String   @id @default(cuid())
+  portal    String
+  action    String
+  status    String
+  message   String?  @db.Text
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  @@index([portal, createdAt])
+  @@map("integration_logs")
+}
+
+// ─── Inteligência de Oportunidades ───────────────────────────────────────────
+
+model Opportunity {
+  id             String            @id @default(cuid())
+  externalId     String?
+  title          String
+  object         String            @db.Text
+  agency         String
+  source         String
+  modality       String?
+  state          String?           @db.VarChar(2)
+  city           String?
+  cnaes          Json?
+  catmats        Json?
+  catser         Json?
+  estimatedValue Decimal?          @db.Decimal(15, 2)
+  publishedAt    DateTime?
+  openingAt      DateTime?
+  sourceUrl      String?           @db.Text
+  status         OpportunityStatus @default(NEW)
+  priority       Priority          @default(MEDIUM)
+  favorite       Boolean           @default(false)
+  score          Int?
+  assigneeId     String?
+  assignee       User?             @relation("OpportunityAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+  tender         Tender?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  @@unique([source, externalId])
+  @@index([status, openingAt])
+  @@index([agency])
+  @@index([state])
+  @@map("opportunities")
+}
+
+// ─── Gestão de Licitações ────────────────────────────────────────────────────
+
+model Tender {
+  id             String       @id @default(cuid())
+  noticeNumber   String
+  processNumber  String?
+  modality       String
+  object         String       @db.Text
+  agency         String
+  source         String
+  estimatedValue Decimal?     @db.Decimal(15, 2)
+  openingAt      DateTime?
+  proposalDueAt  DateTime?
+  status         TenderStatus @default(NEW)
+  priority       Priority     @default(MEDIUM)
+  notes          String?      @db.Text
+  opportunityId  String?      @unique
+  opportunity    Opportunity? @relation(fields: [opportunityId], references: [id], onDelete: SetNull)
+  assigneeId     String?
+  assignee       User?        @relation("TenderAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+  analysis       TenderAnalysis?
+  documents      Document[]
+  tasks          Task[]
+  proposals      Proposal[]
+  auctions       AuctionSession[]
+  contract       Contract?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@index([status, openingAt])
+  @@index([agency])
+  @@map("tenders")
+}
+
+// ─── Análise de Editais ──────────────────────────────────────────────────────
+
+model TenderAnalysis {
+  id           String   @id @default(cuid())
+  tenderId     String   @unique
+  tender       Tender   @relation(fields: [tenderId], references: [id], onDelete: Cascade)
+  summary      String?  @db.Text
+  riskMap      Json?
+  checklist    Json?
+  requirements Json?
+  deadlines    Json?
+  rawText      String?  @db.LongText
+  analyzedAt   DateTime @default(now())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("tender_analyses")
+}
+
+// ─── Gestão Documental ───────────────────────────────────────────────────────
+
+model Document {
+  id          String           @id @default(cuid())
+  name        String
+  category    DocumentCategory @default(OUTRO)
+  fileName    String
+  storageKey  String
+  mimeType    String?
+  sizeBytes   Int?
+  version     Int              @default(1)
+  issuedAt    DateTime?
+  expiresAt   DateTime?
+  status      DocumentStatus   @default(PENDING_REVIEW)
+  tenderId    String?
+  tender      Tender?          @relation(fields: [tenderId], references: [id], onDelete: SetNull)
+  versions    DocumentVersion[]
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@index([status, expiresAt])
+  @@index([category])
+  @@map("documents")
+}
+
+model DocumentVersion {
+  id         String   @id @default(cuid())
+  documentId String
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  version    Int
+  fileName   String
+  storageKey String
+  sizeBytes  Int?
+  createdAt  DateTime @default(now())
+
+  @@index([documentId])
+  @@map("document_versions")
+}
+
+// ─── Propostas ────────────────────────────────────────────────────────────────
+
+model Proposal {
+  id          String         @id @default(cuid())
+  tenderId    String
+  tender      Tender         @relation(fields: [tenderId], references: [id], onDelete: Cascade)
+  title       String
+  status      ProposalStatus @default(DRAFT)
+  totalValue  Decimal?       @db.Decimal(15, 2)
+  margin      Decimal?       @db.Decimal(5, 2)
+  taxRate     Decimal?       @db.Decimal(5, 2)
+  freight     Decimal?       @db.Decimal(15, 2)
+  notes       String?        @db.Text
+  items       ProposalItem[]
+  versions    ProposalVersion[]
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@index([tenderId, status])
+  @@map("proposals")
+}
+
+model ProposalItem {
+  id          String   @id @default(cuid())
+  proposalId  String
+  proposal    Proposal @relation(fields: [proposalId], references: [id], onDelete: Cascade)
+  itemNumber  String?
+  description String   @db.Text
+  unit        String?
+  quantity    Decimal? @db.Decimal(15, 4)
+  unitPrice   Decimal? @db.Decimal(15, 4)
+  totalPrice  Decimal? @db.Decimal(15, 2)
+  lotNumber   String?
+  groupNumber String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([proposalId])
+  @@map("proposal_items")
+}
+
+model ProposalVersion {
+  id         String   @id @default(cuid())
+  proposalId String
+  proposal   Proposal @relation(fields: [proposalId], references: [id], onDelete: Cascade)
+  version    Int
+  snapshot   Json
+  createdAt  DateTime @default(now())
+
+  @@index([proposalId])
+  @@map("proposal_versions")
+}
+
+// ─── Pregão Eletrônico e Robô de Lances ──────────────────────────────────────
+
+model AuctionSession {
+  id          String        @id @default(cuid())
+  tenderId    String
+  tender      Tender        @relation(fields: [tenderId], references: [id], onDelete: Cascade)
+  externalId  String?
+  status      AuctionStatus @default(SCHEDULED)
+  startedAt   DateTime?
+  finishedAt  DateTime?
+  strategy    BidStrategy?
+  minBid      Decimal?      @db.Decimal(15, 4)
+  maxBid      Decimal?      @db.Decimal(15, 4)
+  minMargin   Decimal?      @db.Decimal(5, 2)
+  autoBid     Boolean       @default(false)
+  bids        Bid[]
+  messages    AuctionMessage[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([status])
+  @@index([tenderId])
+  @@map("auction_sessions")
+}
+
+model Bid {
+  id        String         @id @default(cuid())
+  sessionId String
+  session   AuctionSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  amount    Decimal        @db.Decimal(15, 4)
+  isAuto    Boolean        @default(false)
+  isWinning Boolean        @default(false)
+  createdAt DateTime       @default(now())
+
+  @@index([sessionId, createdAt])
+  @@map("bids")
+}
+
+model AuctionMessage {
+  id          String         @id @default(cuid())
+  sessionId   String
+  session     AuctionSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  sender      String
+  content     String         @db.Text
+  attachments Json?
+  isFromUs    Boolean        @default(false)
+  createdAt   DateTime       @default(now())
+
+  @@index([sessionId, createdAt])
+  @@map("auction_messages")
+}
+
+// ─── Workflow ────────────────────────────────────────────────────────────────
+
+model Task {
+  id          String     @id @default(cuid())
+  title       String
+  description String?    @db.Text
+  status      TaskStatus @default(TODO)
+  priority    Priority   @default(MEDIUM)
+  dueAt       DateTime?
+  tenderId    String?
+  tender      Tender?    @relation(fields: [tenderId], references: [id], onDelete: Cascade)
+  assigneeId  String?
+  assignee    User?      @relation("TaskAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+  createdById String
+  createdBy   User       @relation("TaskCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  comments    TaskComment[]
+  approvals   Approval[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@index([status, dueAt])
+  @@map("tasks")
+}
+
+model TaskComment {
+  id        String   @id @default(cuid())
+  taskId    String
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  authorId  String
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+
+  @@index([taskId])
+  @@map("task_comments")
+}
+
+model Approval {
+  id         String         @id @default(cuid())
+  taskId     String
+  task       Task           @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  approverId String
+  status     ApprovalStatus @default(PENDING)
+  comment    String?        @db.Text
+  decidedAt  DateTime?
+  createdAt  DateTime       @default(now())
+
+  @@index([taskId])
+  @@map("approvals")
+}
+
+// ─── Contratos ────────────────────────────────────────────────────────────────
+
+model Contract {
+  id            String         @id @default(cuid())
+  tenderId      String?        @unique
+  tender        Tender?        @relation(fields: [tenderId], references: [id], onDelete: SetNull)
+  contractNumber String
+  agency        String
+  object        String         @db.Text
+  totalValue    Decimal?       @db.Decimal(15, 2)
+  balance       Decimal?       @db.Decimal(15, 2)
+  status        ContractStatus @default(ACTIVE)
+  signedAt      DateTime?
+  startsAt      DateTime?
+  endsAt        DateTime?
+  addendums     ContractAddendum[]
+  guarantees    ContractGuarantee[]
+  financials    FinancialRecord[]
+  priceRecord   PriceRecord?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@index([status, endsAt])
+  @@index([agency])
+  @@map("contracts")
+}
+
+model ContractAddendum {
+  id          String   @id @default(cuid())
+  contractId  String
+  contract    Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  number      String
+  description String?  @db.Text
+  valueChange Decimal? @db.Decimal(15, 2)
+  signedAt    DateTime?
+  createdAt   DateTime @default(now())
+
+  @@index([contractId])
+  @@map("contract_addendums")
+}
+
+model ContractGuarantee {
+  id          String    @id @default(cuid())
+  contractId  String
+  contract    Contract  @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  type        String
+  value       Decimal?  @db.Decimal(15, 2)
+  expiresAt   DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([contractId])
+  @@map("contract_guarantees")
+}
+
+// ─── Atas de Registro de Preço ────────────────────────────────────────────────
+
+model PriceRecord {
+  id          String            @id @default(cuid())
+  contractId  String            @unique
+  contract    Contract          @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  ataNumber   String
+  startsAt    DateTime?
+  endsAt      DateTime?
+  items       PriceRecordItem[]
+  caronas     PriceRecordCarona[]
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  @@map("price_records")
+}
+
+model PriceRecordItem {
+  id            String      @id @default(cuid())
+  priceRecordId String
+  priceRecord   PriceRecord @relation(fields: [priceRecordId], references: [id], onDelete: Cascade)
+  itemNumber    String?
+  description   String      @db.Text
+  unit          String?
+  registeredQty Decimal?    @db.Decimal(15, 4)
+  balanceQty    Decimal?    @db.Decimal(15, 4)
+  unitPrice     Decimal?    @db.Decimal(15, 4)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@index([priceRecordId])
+  @@map("price_record_items")
+}
+
+model PriceRecordCarona {
+  id            String      @id @default(cuid())
+  priceRecordId String
+  priceRecord   PriceRecord @relation(fields: [priceRecordId], references: [id], onDelete: Cascade)
+  agency        String
+  object        String?     @db.Text
+  value         Decimal?    @db.Decimal(15, 2)
+  requestedAt   DateTime?
+  createdAt     DateTime    @default(now())
+
+  @@index([priceRecordId])
+  @@map("price_record_caronas")
+}
+
+// ─── Financeiro ───────────────────────────────────────────────────────────────
+
+model FinancialRecord {
+  id            String          @id @default(cuid())
+  contractId    String
+  contract      Contract        @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  type          String
+  description   String?
+  amount        Decimal         @db.Decimal(15, 2)
+  status        FinancialStatus @default(PENDING)
+  referenceDate DateTime?
+  dueDate       DateTime?
+  paidAt        DateTime?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  @@index([contractId, status])
+  @@index([dueDate])
+  @@map("financial_records")
+}
+
+// ─── Inteligência de Mercado e Concorrentes ──────────────────────────────────
+
+model Competitor {
+  id          String          @id @default(cuid())
+  cnpj        String?         @unique
+  name        String
+  wins        CompetitorWin[]
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@map("competitors")
+}
+
+model CompetitorWin {
+  id           String     @id @default(cuid())
+  competitorId String
+  competitor   Competitor @relation(fields: [competitorId], references: [id], onDelete: Cascade)
+  agency       String
+  object       String?    @db.Text
+  modality     String?
+  value        Decimal?   @db.Decimal(15, 2)
+  wonAt        DateTime?
+  source       String?
+  createdAt    DateTime   @default(now())
+
+  @@index([competitorId])
+  @@index([agency])
+  @@map("competitor_wins")
+}

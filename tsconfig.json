@@ -1,0 +1,7 @@
+{
+  "extends": "@gov360/typescript-config/base.json",
+  "compilerOptions": {
+    "baseUrl": "."
+  },
+  "exclude": ["node_modules", "dist", ".next"]
+}

@@ -1,0 +1,19 @@
+{
+  "name": "@gov360/api-client",
+  "version": "0.0.0",
+  "private": true,
+  "license": "MIT",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@gov360/types": "workspace:*",
+    "axios": "^1.10.0"
+  },
+  "devDependencies": {
+    "@gov360/typescript-config": "workspace:*",
+    "typescript": "^5.8.3"
+  }
+}

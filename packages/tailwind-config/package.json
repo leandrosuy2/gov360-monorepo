@@ -1,0 +1,15 @@
+{
+  "name": "@gov360/tailwind-config",
+  "version": "0.0.0",
+  "private": true,
+  "license": "MIT",
+  "dependencies": {
+    "tailwindcss-animate": "^1.0.7"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.17"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
