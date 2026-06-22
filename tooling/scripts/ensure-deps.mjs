@@ -2,6 +2,7 @@ import { spawnSync } from "node:child_process";
 import { createRequire } from "node:module";
 import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
+import { existsSync } from "node:fs";
 
 const root = join(import.meta.dirname, "../..");
 const pnpmVersion = "9.15.9";
@@ -29,6 +30,15 @@ function canResolve(requireFn, name) {
 }
 
 export function workspaceDepsInstalled() {
+  const pnpmStoreExists = existsSync(join(root, "node_modules/.pnpm"));
+  const prismaHoisted = existsSync(join(root, "node_modules/.prisma/client"));
+  const npmrcExists = existsSync(join(root, ".npmrc"));
+
+  if (npmrcExists && pnpmStoreExists && !prismaHoisted) {
+    console.log("[gov360] .npmrc detectado mas Prisma nao esta hoisted. Forcando pnpm install...");
+    return false;
+  }
+
   return requiredPackages.every(({ pkgJson, name }) => {
     const requireFn = createRequire(join(root, pkgJson));
     return canResolve(requireFn, name);
