@@ -10,11 +10,11 @@ export class CreateAuctionDto {
   externalId?: string;
 
   @IsOptional()
-  @IsEnum(Prisma.AuctionStatus)
+  @IsEnum(AuctionStatus)
   status?: AuctionStatus;
 
   @IsOptional()
-  @IsEnum(Prisma.BidStrategy)
+  @IsEnum(BidStrategy)
   strategy?: BidStrategy;
 
   @IsOptional()
@@ -36,11 +36,11 @@ export class CreateAuctionDto {
 
 export class UpdateAuctionDto {
   @IsOptional()
-  @IsEnum(Prisma.AuctionStatus)
+  @IsEnum(AuctionStatus)
   status?: AuctionStatus;
 
   @IsOptional()
-  @IsEnum(Prisma.BidStrategy)
+  @IsEnum(BidStrategy)
   strategy?: BidStrategy;
 
   @IsOptional()
