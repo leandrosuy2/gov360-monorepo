@@ -1,10 +1,6 @@
 {
   "name": "gov360",
   "private": true,
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ],
   "scripts": {
     "dev": "node tooling/scripts/dev.mjs",
     "prestart": "node tooling/scripts/ensure-deps.mjs",

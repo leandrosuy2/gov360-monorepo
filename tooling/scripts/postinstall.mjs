@@ -12,9 +12,17 @@ try {
   process.exit(0);
 }
 
-const result = spawnSync("npx", ["prisma", "generate"], {
+const result = spawnSync("pnpm", ["exec", "prisma", "generate"], {
   cwd: root,
   stdio: "inherit",
 });
+
+if (result.error?.code === "ENOENT") {
+  const fallback = spawnSync("npx", ["prisma", "generate"], {
+    cwd: root,
+    stdio: "inherit",
+  });
+  process.exit(fallback.status ?? 0);
+}
 
 process.exit(result.status ?? 0);
