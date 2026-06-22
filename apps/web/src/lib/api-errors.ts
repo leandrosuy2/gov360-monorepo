@@ -3,7 +3,7 @@ import { isAxiosError } from "axios";
 export function getLoginErrorMessage(error: unknown): string {
   if (isAxiosError(error)) {
     if (!error.response) {
-      return "Não foi possível conectar ao servidor. Execute `pnpm dev` na raiz do projeto.";
+      return "Não foi possível conectar ao servidor. Verifique se a API está em execução.";
     }
 
     const status = error.response.status;

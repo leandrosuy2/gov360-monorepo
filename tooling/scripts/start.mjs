@@ -4,12 +4,17 @@ import { join } from "node:path";
 
 const root = join(import.meta.dirname, "../..");
 const apiDir = join(root, "apps/api");
-const webDir = join(root, "apps/web");
 const apiDist = join(apiDir, "dist/main.js");
-const isProd = process.env.NODE_ENV === "production" && existsSync(apiDist);
+const nextBuild = join(root, "apps/web/.next/BUILD_ID");
 const webPort = process.env.PORT ?? "3000";
+const apiPort = process.env.API_PORT ?? "3001";
 
 const children = [];
+
+if (!existsSync(apiDist) || !existsSync(nextBuild)) {
+  console.error("[gov360] Build ausente. Execute `node tooling/scripts/build.mjs` antes do start.");
+  process.exit(1);
+}
 
 function resolvePnpmCommand() {
   const candidates = [
@@ -41,7 +46,9 @@ function run(label, command, args, cwd = root) {
     shell: false,
     env: {
       ...process.env,
+      NODE_ENV: "production",
       PORT: webPort,
+      API_PORT: apiPort,
     },
   });
 
@@ -62,7 +69,7 @@ function run(label, command, args, cwd = root) {
 
 function runPnpm(label, pnpmArgs) {
   if (!pnpm) {
-    console.error("[gov360] pnpm não encontrado. Execute `node tooling/scripts/ensure-deps.mjs` antes.");
+    console.error("[gov360] pnpm não encontrado.");
     process.exit(1);
   }
 
@@ -78,10 +85,5 @@ function shutdown() {
 process.on("SIGTERM", shutdown);
 process.on("SIGINT", shutdown);
 
-if (isProd) {
-  run("api", process.execPath, [apiDist], apiDir);
-  runPnpm("web", ["--dir", "apps/web", "exec", "next", "start", "-p", webPort]);
-} else {
-  runPnpm("api", ["--dir", "apps/api", "exec", "tsx", "watch", "src/main.ts"]);
-  runPnpm("web", ["--dir", "apps/web", "exec", "next", "dev"]);
-}
+run("api", process.execPath, [apiDist], apiDir);
+runPnpm("web", ["--dir", "apps/web", "exec", "next", "start", "-H", "0.0.0.0", "-p", webPort]);

@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "dev": "node tooling/scripts/dev.mjs",
-    "prestart": "node tooling/scripts/ensure-deps.mjs",
+    "prestart": "node tooling/scripts/ensure-deps.mjs && node tooling/scripts/build.mjs",
     "start": "node tooling/scripts/start.mjs",
     "build": "turbo build",
     "postinstall": "node tooling/scripts/postinstall.mjs",
