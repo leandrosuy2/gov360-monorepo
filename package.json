@@ -1,9 +1,15 @@
 {
   "name": "gov360",
   "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
     "dev": "node tooling/scripts/dev.mjs",
+    "start": "node tooling/scripts/start.mjs",
     "build": "turbo build",
+    "postinstall": "prisma generate",
     "lint": "turbo lint",
     "typecheck": "turbo typecheck",
     "clean": "node tooling/scripts/clean.mjs",
