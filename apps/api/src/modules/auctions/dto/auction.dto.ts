@@ -1,5 +1,19 @@
 import { IsBoolean, IsEnum, IsNumber, IsOptional, IsString } from 'class-validator';
-import { AuctionStatus, BidStrategy } from '@prisma/client';
+// Local enum definitions mirroring Prisma enums for validation
+export enum AuctionStatus {
+  SCHEDULED = "SCHEDULED",
+  ACTIVE = "ACTIVE",
+  PAUSED = "PAUSED",
+  FINISHED = "FINISHED",
+  CANCELED = "CANCELED",
+}
+
+export enum BidStrategy {
+  AGGRESSIVE = "AGGRESSIVE",
+  MODERATE = "MODERATE",
+  CONSERVATIVE = "CONSERVATIVE",
+}
+
 
 export class CreateAuctionDto {
   @IsString()
