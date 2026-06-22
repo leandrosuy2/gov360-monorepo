@@ -42,11 +42,11 @@ function pnpmMissing(result) {
 function installWithPnpm() {
   run("corepack", ["enable"]);
 
-  let result = run("pnpm", ["install"]);
+  let result = run("pnpm", ["install", "--no-frozen-lockfile"]);
 
   if (pnpmMissing(result) || result.status !== 0) {
     console.log(`[gov360] Tentando pnpm@${pnpmVersion} via npx...`);
-    result = run("npx", ["--yes", `pnpm@${pnpmVersion}`, "install"]);
+    result = run("npx", ["--yes", `pnpm@${pnpmVersion}`, "install", "--no-frozen-lockfile"]);
   }
 
   return result;

@@ -1,11 +1,8 @@
 import { existsSync } from "node:fs";
-import { spawn } from "node:child_process";
-import { createRequire } from "node:module";
-import { dirname, join } from "node:path";
+import { spawn, spawnSync } from "node:child_process";
+import { join } from "node:path";
 
 const root = join(import.meta.dirname, "../..");
-const require = createRequire(join(root, "package.json"));
-
 const apiDir = join(root, "apps/api");
 const webDir = join(root, "apps/web");
 const apiDist = join(apiDir, "dist/main.js");
@@ -14,22 +11,30 @@ const webPort = process.env.PORT ?? "3000";
 
 const children = [];
 
-function resolvePackageBin(packageName, binKey) {
-  const pkgJsonPath = require.resolve(`${packageName}/package.json`);
-  const pkg = require(pkgJsonPath);
-  const bin = pkg.bin;
+function resolvePnpmCommand() {
+  const candidates = [
+    ["pnpm", []],
+    ["corepack", ["pnpm"]],
+    ["npx", ["--yes", "pnpm@9.15.9"]],
+  ];
 
-  if (!bin) {
-    throw new Error(`Pacote "${packageName}" não expõe binário.`);
+  for (const [command, prefix] of candidates) {
+    const probe = spawnSync(command, [...prefix, "--version"], {
+      cwd: root,
+      stdio: "ignore",
+    });
+
+    if (!probe.error && probe.status === 0) {
+      return { command, prefix };
+    }
   }
 
-  const relative =
-    typeof bin === "string" ? bin : bin[binKey ?? Object.keys(bin)[0]];
-
-  return join(dirname(pkgJsonPath), relative);
+  return null;
 }
 
-function run(label, command, args, cwd) {
+const pnpm = resolvePnpmCommand();
+
+function run(label, command, args, cwd = root) {
   const child = spawn(command, args, {
     cwd,
     stdio: "inherit",
@@ -55,13 +60,13 @@ function run(label, command, args, cwd) {
   return child;
 }
 
-function runLocalOrNpx(label, packageName, binKey, localArgs, npxPackage, npxArgs, cwd) {
-  try {
-    const bin = resolvePackageBin(packageName, binKey);
-    run(label, process.execPath, [bin, ...localArgs], cwd);
-  } catch {
-    run(label, "npx", ["--yes", npxPackage, ...npxArgs], cwd);
+function runPnpm(label, pnpmArgs) {
+  if (!pnpm) {
+    console.error("[gov360] pnpm não encontrado. Execute `node tooling/scripts/ensure-deps.mjs` antes.");
+    process.exit(1);
   }
+
+  run(label, pnpm.command, [...pnpm.prefix, ...pnpmArgs], root);
 }
 
 function shutdown() {
@@ -75,8 +80,8 @@ process.on("SIGINT", shutdown);
 
 if (isProd) {
   run("api", process.execPath, [apiDist], apiDir);
-  runLocalOrNpx("web", "next", "next", ["start", "-p", webPort], "next@15", ["start", "-p", webPort], webDir);
+  runPnpm("web", ["--dir", "apps/web", "exec", "next", "start", "-p", webPort]);
 } else {
-  runLocalOrNpx("api", "tsx", "tsx", ["watch", "src/main.ts"], "tsx@4", ["watch", "src/main.ts"], apiDir);
-  runLocalOrNpx("web", "next", "next", ["dev"], "next@15", ["dev"], webDir);
+  runPnpm("api", ["--dir", "apps/api", "exec", "tsx", "watch", "src/main.ts"]);
+  runPnpm("web", ["--dir", "apps/web", "exec", "next", "dev"]);
 }
