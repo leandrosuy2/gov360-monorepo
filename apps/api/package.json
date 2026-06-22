@@ -33,7 +33,8 @@
     "passport-jwt": "^4.0.1",
     "pdf-parse": "^2.4.5",
     "reflect-metadata": "^0.2.2",
-    "rxjs": "^7.8.2"
+    "rxjs": "^7.8.2",
+    "tsx": "^4.20.3"
   },
   "devDependencies": {
     "@gov360/eslint-config": "workspace:*",
@@ -55,7 +56,6 @@
     "supertest": "^7.1.1",
     "ts-jest": "^29.4.0",
     "ts-node": "^10.9.2",
-    "tsx": "^4.20.3",
     "typescript": "^5.8.3"
   }
 }

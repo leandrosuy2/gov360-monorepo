@@ -6,6 +6,14 @@ import { pathToFileURL } from "node:url";
 const root = join(import.meta.dirname, "../..");
 const pnpmVersion = "9.15.9";
 
+const requiredPackages = [
+  { pkgJson: "apps/api/package.json", name: "@nestjs/common" },
+  { pkgJson: "apps/api/package.json", name: "reflect-metadata" },
+  { pkgJson: "apps/api/package.json", name: "tsx" },
+  { pkgJson: "apps/web/package.json", name: "next" },
+  { pkgJson: "apps/web/package.json", name: "@gov360/typescript-config" },
+];
+
 function canResolve(requireFn, name) {
   try {
     requireFn.resolve(name);
@@ -21,18 +29,22 @@ function canResolve(requireFn, name) {
 }
 
 export function workspaceDepsInstalled() {
-  const apiRequire = createRequire(join(root, "apps/api/package.json"));
-  const webRequire = createRequire(join(root, "apps/web/package.json"));
-
-  return (
-    canResolve(apiRequire, "@nestjs/common") &&
-    canResolve(apiRequire, "reflect-metadata") &&
-    canResolve(webRequire, "@gov360/typescript-config")
-  );
+  return requiredPackages.every(({ pkgJson, name }) => {
+    const requireFn = createRequire(join(root, pkgJson));
+    return canResolve(requireFn, name);
+  });
 }
 
 function run(command, args) {
-  return spawnSync(command, args, { cwd: root, stdio: "inherit" });
+  return spawnSync(command, args, {
+    cwd: root,
+    stdio: "inherit",
+    env: {
+      ...process.env,
+      NODE_ENV: "development",
+      CI: "false",
+    },
+  });
 }
 
 function pnpmMissing(result) {
@@ -42,11 +54,13 @@ function pnpmMissing(result) {
 function installWithPnpm() {
   run("corepack", ["enable"]);
 
-  let result = run("pnpm", ["install", "--no-frozen-lockfile"]);
+  const installArgs = ["install", "--no-frozen-lockfile", "--prod=false"];
+
+  let result = run("pnpm", installArgs);
 
   if (pnpmMissing(result) || result.status !== 0) {
     console.log(`[gov360] Tentando pnpm@${pnpmVersion} via npx...`);
-    result = run("npx", ["--yes", `pnpm@${pnpmVersion}`, "install", "--no-frozen-lockfile"]);
+    result = run("npx", ["--yes", `pnpm@${pnpmVersion}`, ...installArgs]);
   }
 
   return result;
@@ -72,7 +86,14 @@ export function ensureDeps() {
   }
 
   if (!workspaceDepsInstalled()) {
-    console.error("[gov360] pnpm install concluiu, mas pacotes do workspace ainda estão ausentes.");
+    const missing = requiredPackages
+      .filter(({ pkgJson, name }) => !canResolve(createRequire(join(root, pkgJson)), name))
+      .map(({ name }) => name);
+
+    console.error(
+      "[gov360] pnpm install concluiu, mas pacotes do workspace ainda estão ausentes:",
+      missing.join(", "),
+    );
     return 1;
   }
 
