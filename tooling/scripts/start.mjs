@@ -1,4 +1,7 @@
-import { existsSync } from "node:fs";
+import { config as dotenvConfig } from "dotenv";
+import { join } from "node:path";
+
+dotenvConfig({ path: join(root, ".env") });
 import { spawn, spawnSync } from "node:child_process";
 import { join } from "node:path";
 

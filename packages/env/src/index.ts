@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const apiEnvSchema = z.object({
-  DATABASE_URL: z.string().url().or(z.string().startsWith("postgresql://")),
+  DATABASE_URL: z.string().min(1),
   API_PORT: z.coerce.number().default(3001),
   API_URL: z.string().url().default("http://localhost:3001"),
   JWT_SECRET: z.string().min(8),

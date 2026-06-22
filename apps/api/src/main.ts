@@ -1,4 +1,8 @@
-import "reflect-metadata";
+import { config as dotenvConfig } from "dotenv";
+import { join } from "path";
+
+dotenvConfig({ path: join(__dirname, "..", "..", "..", ".env") });
+import "dotenv/config";
 import { ValidationPipe } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module";
