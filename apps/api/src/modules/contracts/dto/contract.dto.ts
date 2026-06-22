@@ -1,4 +1,4 @@
-import { ContractStatus } from "@prisma/client";
+import type { ContractStatus } from "@prisma/client";
 import { IsDateString, IsEnum, IsNumber, IsOptional, IsString } from "class-validator";
 
 export class CreateContractDto {
@@ -20,8 +20,8 @@ export class CreateContractDto {
   balance?: number;
 
   @IsOptional()
-  @IsEnum(ContractStatus)
-  status?: ContractStatus;
+  @IsString()
+  status?: string;
 
   @IsOptional()
   @IsDateString()
@@ -41,9 +41,8 @@ export class CreateContractDto {
 }
 
 export class UpdateContractDto {
-  @IsOptional()
-  @IsEnum(ContractStatus)
-  status?: ContractStatus;
+  @IsString()
+  status?: string;
 
   @IsOptional()
   @IsNumber()
