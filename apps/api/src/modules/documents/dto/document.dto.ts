@@ -5,8 +5,8 @@ export class CreateDocumentDto {
   @IsString()
   name!: string;
 
-  @IsEnum(DocumentCategory)
-  category!: DocumentCategory;
+  @IsString()
+  category!: string;
 
   @IsString()
   fileName!: string;
@@ -41,8 +41,8 @@ export class UpdateDocumentDto {
   name?: string;
 
   @IsOptional()
-  @IsEnum(DocumentCategory)
-  category?: DocumentCategory;
+  @IsString()
+  category?: string;
 
   @IsOptional()
   @IsDateString()
