@@ -1,6 +1,7 @@
 import { config as dotenvConfig } from "dotenv";
 import { join } from "node:path";
 import { existsSync } from "node:fs";
+import { spawn, spawnSync } from "node:child_process";
 
 const root = join(import.meta.dirname, "../..");
 
