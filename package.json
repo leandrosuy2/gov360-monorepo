@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "dev": "node tooling/scripts/dev.mjs",
-    "prestart": "node tooling/scripts/ensure-deps.mjs && node tooling/scripts/build.mjs",
+    "prestart": "node tooling/scripts/ensure-deps.mjs",
     "start": "node tooling/scripts/start.mjs",
     "build": "prisma generate && turbo build",
     "postinstall": "node tooling/scripts/postinstall.mjs",

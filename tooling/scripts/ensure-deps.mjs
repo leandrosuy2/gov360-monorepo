@@ -16,9 +16,8 @@ const corepackCommand = isWindows ? "corepack.cmd" : "corepack";
 const requiredPackages = [
   { pkgJson: "apps/api/package.json", name: "@nestjs/common" },
   { pkgJson: "apps/api/package.json", name: "@nestjs/cli/bin/nest.js" },
-  { pkgJson: "apps/api/package.json", name: "@prisma/adapter-mariadb/package.json" },
+  { pkgJson: "apps/api/package.json", name: "@prisma/client" },
   { pkgJson: "apps/api/package.json", name: "reflect-metadata" },
-  { pkgJson: "apps/api/package.json", name: "mariadb/package.json" },
   { pkgJson: "apps/api/package.json", name: "tsx" },
   { pkgJson: "apps/web/package.json", name: "next" },
   { pkgJson: "apps/web/package.json", name: "next/dist/bin/next" },
