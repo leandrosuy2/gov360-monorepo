@@ -1,17 +1,18 @@
-import { config as dotenvConfig } from "dotenv";
+import { existsSync, readFileSync } from "node:fs";
+import { spawn } from "node:child_process";
 import { join } from "node:path";
-import { existsSync } from "node:fs";
-import { spawn, spawnSync } from "node:child_process";
 
 const root = join(import.meta.dirname, "../..");
-
-dotenvConfig({ path: join(root, ".env") });
 const apiDir = join(root, "apps/api");
+const webDir = join(root, "apps/web");
 const apiDist = join(apiDir, "dist/main.js");
-const nextBuild = join(root, "apps/web/.next/BUILD_ID");
+const nextBuild = join(webDir, ".next/BUILD_ID");
+const nextRunner = join(root, "tooling/scripts/run-next.mjs");
+
+loadDotEnv(join(root, ".env"));
+
 const webPort = process.env.PORT ?? "3000";
 const apiPort = process.env.API_PORT ?? "3001";
-
 const children = [];
 
 if (!existsSync(apiDist) || !existsSync(nextBuild)) {
@@ -19,30 +20,14 @@ if (!existsSync(apiDist) || !existsSync(nextBuild)) {
   process.exit(1);
 }
 
-function resolvePnpmCommand() {
-  const candidates = [
-    ["pnpm", []],
-    ["corepack", ["pnpm"]],
-    ["npx", ["--yes", "pnpm@9.15.9"]],
-  ];
-
-  for (const [command, prefix] of candidates) {
-    const probe = spawnSync(command, [...prefix, "--version"], {
-      cwd: root,
-      stdio: "ignore",
-    });
-
-    if (!probe.error && probe.status === 0) {
-      return { command, prefix };
-    }
-  }
-
-  return null;
+const missingEnv = ["DATABASE_URL", "JWT_SECRET"].filter((key) => !process.env[key]);
+if (missingEnv.length > 0) {
+  console.error(`[gov360] Variáveis de ambiente obrigatórias ausentes: ${missingEnv.join(", ")}`);
+  console.error("[gov360] Configure essas variáveis no ambiente do deploy ou forneça um arquivo .env na raiz do projeto.");
+  process.exit(1);
 }
 
-const pnpm = resolvePnpmCommand();
-
-function run(label, command, args, cwd = root) {
+function run(label, command, args, cwd) {
   const child = spawn(command, args, {
     cwd,
     stdio: "inherit",
@@ -70,15 +55,6 @@ function run(label, command, args, cwd = root) {
   return child;
 }
 
-function runPnpm(label, pnpmArgs) {
-  if (!pnpm) {
-    console.error("[gov360] pnpm não encontrado.");
-    process.exit(1);
-  }
-
-  run(label, pnpm.command, [...pnpm.prefix, ...pnpmArgs], root);
-}
-
 function shutdown() {
   for (const child of children) {
     if (!child.killed) child.kill();
@@ -89,4 +65,21 @@ process.on("SIGTERM", shutdown);
 process.on("SIGINT", shutdown);
 
 run("api", process.execPath, [apiDist], apiDir);
-runPnpm("web", ["--dir", "apps/web", "exec", "next", "start", "-H", "0.0.0.0", "-p", webPort]);
+run("web", process.execPath, [nextRunner, "start", "-H", "0.0.0.0", "-p", webPort], webDir);
+
+function loadDotEnv(filePath) {
+  if (!existsSync(filePath)) return;
+  const content = readFileSync(filePath, "utf8");
+  for (const line of content.split(/\r?\n/)) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("#")) continue;
+    const index = trimmed.indexOf("=");
+    if (index === -1) continue;
+    const key = trimmed.slice(0, index).trim();
+    let value = trimmed.slice(index + 1).trim();
+    if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+      value = value.slice(1, -1);
+    }
+    if (key && process.env[key] === undefined) process.env[key] = value;
+  }
+}

@@ -13,11 +13,11 @@ function runPnpm(args) {
     CI: "false",
   };
 
-  let result = spawnSync("pnpm", args, { cwd: root, stdio: "inherit", env, shell: true });
+  let result = spawnSync("pnpm", args, { cwd: root, stdio: "inherit", env, shell: false });
 
   if (result.error?.code === "ENOENT") {
-    spawnSync("corepack", ["enable"], { cwd: root, stdio: "inherit", shell: true });
-    result = spawnSync("pnpm", args, { cwd: root, stdio: "inherit", env, shell: true });
+    spawnSync("corepack", ["enable"], { cwd: root, stdio: "inherit", shell: false });
+    result = spawnSync("pnpm", args, { cwd: root, stdio: "inherit", env, shell: false });
   }
 
   if (result.error?.code === "ENOENT") {
@@ -25,7 +25,7 @@ function runPnpm(args) {
       cwd: root,
       stdio: "inherit",
       env,
-      shell: true,
+      shell: false,
     });
   }
 

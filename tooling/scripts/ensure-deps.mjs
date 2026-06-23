@@ -34,10 +34,11 @@ function canResolve(requireFn, name) {
 export function workspaceDepsInstalled() {
   const pnpmStoreExists = existsSync(join(root, "node_modules/.pnpm"));
   const prismaHoisted = existsSync(join(root, "node_modules/.prisma/client"));
+  const prismaRuntimeHoisted = existsSync(join(root, "node_modules/@prisma/client-runtime-utils"));
   const npmrcExists = existsSync(join(root, ".npmrc"));
 
-  if (npmrcExists && pnpmStoreExists && !prismaHoisted) {
-    console.log("[gov360] .npmrc detectado mas Prisma nao esta hoisted. Forcando pnpm install...");
+  if (npmrcExists && pnpmStoreExists && (!prismaHoisted || !prismaRuntimeHoisted)) {
+    console.log("[gov360] .npmrc detectado mas runtime do Prisma nao esta hoisted. Forcando pnpm install...");
     return false;
   }
 
