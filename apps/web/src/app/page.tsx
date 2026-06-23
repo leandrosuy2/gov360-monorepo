@@ -5,19 +5,18 @@ import {
   BellRing,
   Bot,
   Building2,
+  CalendarClock,
   CheckCircle2,
-  DatabaseZap,
+  Database,
+  FileCheck2,
   FileSearch,
   FileText,
-  Globe2,
   Landmark,
-  LineChart,
   LockKeyhole,
   MapPinned,
   Radar,
   Scale,
   ShieldCheck,
-  Sparkles,
   Target,
   Trophy,
   Workflow,
@@ -25,193 +24,223 @@ import {
 import { Button } from "@gov360/ui";
 import { BrandLogo } from "@/components/brand-logo";
 
+const indicators = [
+  { label: "Oportunidades monitoradas", value: "1.284" },
+  { label: "Valor estimado no radar", value: "R$ 42,8 mi" },
+  { label: "Licitações em análise", value: "86" },
+  { label: "Prazos críticos", value: "12" },
+];
+
+const opportunities = [
+  {
+    source: "PNCP",
+    title: "Aquisição de equipamentos e serviços técnicos",
+    agency: "Ministério da Gestão e Inovação",
+    modality: "Pregão eletrônico",
+    date: "16/07/2026",
+    value: "R$ 2.177.000,00",
+    score: "92%",
+    tone: "emerald",
+  },
+  {
+    source: "Compras.gov.br",
+    title: "Registro de preços para fornecimento continuado",
+    agency: "Universidade Federal",
+    modality: "SRP",
+    date: "09/07/2026",
+    value: "R$ 860.400,00",
+    score: "81%",
+    tone: "blue",
+  },
+  {
+    source: "DOU",
+    title: "Publicação com alteração de edital",
+    agency: "Autarquia Federal",
+    modality: "Clipping oficial",
+    date: "Hoje",
+    value: "Monitorar",
+    score: "Atenção",
+    tone: "amber",
+  },
+];
+
 const modules = [
-  { icon: Radar, title: "Radar de oportunidades", text: "PNCP, Compras.gov, DOU e portais públicos em uma consulta estratégica por perfil, região, valor e modalidade." },
-  { icon: FileSearch, title: "Análise de editais", text: "Extração de exigências, documentos, prazos, riscos, checklist automático e resumo executivo." },
-  { icon: Workflow, title: "Gestão do processo", text: "Responsáveis, etapas, tarefas, aprovações, pendências, histórico e anexos em uma linha operacional clara." },
-  { icon: Bot, title: "Pregões e lances", text: "Central de disputas, alertas operacionais, estratégias de lance e monitoramento em tempo real." },
-  { icon: Trophy, title: "Contratos e financeiro", text: "Homologações, atas, contratos, aditivos, empenhos, faturamento, recebimentos e rentabilidade." },
-  { icon: BarChart3, title: "BI e mercado", text: "Órgãos compradores, fornecedores vencedores, preços públicos, concorrentes e tendências por segmento." },
+  { icon: Radar, title: "Oportunidades", text: "Busca por palavra-chave, CNAE, CATMAT, CATSER, estado, município, órgão, modalidade e valor." },
+  { icon: FileSearch, title: "Editais", text: "Leitura de PDF, exigências, documentos obrigatórios, prazos, checklist e mapa de riscos." },
+  { icon: FileCheck2, title: "Documentos", text: "Certidões, vencimentos, versionamento, histórico, categorias e alertas de regularidade." },
+  { icon: Workflow, title: "Gestão de licitações", text: "Etapas, status, responsáveis, tarefas, pendências, observações, arquivos e timeline." },
+  { icon: Bot, title: "Pregões e lances", text: "Central de pregões ativos, alertas operacionais, histórico e estratégia de disputa." },
+  { icon: Trophy, title: "Contratos e financeiro", text: "Contratos, atas, aditivos, empenhos, faturamento, recebimentos e rentabilidade." },
+  { icon: BarChart3, title: "BI executivo", text: "Taxa de sucesso, valor disputado, homologado, contratado, recebido e produtividade." },
+  { icon: Building2, title: "Mercado e concorrentes", text: "Órgãos compradores, fornecedores vencedores, preços praticados e ranking de concorrentes." },
 ];
 
-const stats = [
-  ["128", "licitações abertas hoje"],
-  ["R$ 42,8 mi", "valor estimado monitorado"],
-  ["37", "oportunidades com alto score"],
-  ["94%", "documentos válidos"],
+const sources = [
+  "PNCP",
+  "Compras.gov.br",
+  "Comprasnet Contratos",
+  "Portal da Transparência / CGU",
+  "INLABS / DOU",
+  "dados.gov.br",
+  "Portais estaduais",
+  "Portais municipais",
 ];
 
-const sources = ["PNCP", "Compras.gov.br", "Comprasnet Contratos", "CGU / CEIS / CNEP", "INLABS / DOU", "dados.gov.br", "Portais estaduais", "Portais municipais"];
-
-const journey = [
-  { icon: Globe2, title: "Captar", text: "Busca automática em fontes oficiais e privadas." },
-  { icon: Target, title: "Priorizar", text: "Score por aderência, valor, prazo, órgão e histórico." },
-  { icon: FileText, title: "Preparar", text: "Edital, certidões, documentos, tarefas e proposta." },
-  { icon: LineChart, title: "Medir", text: "Resultado, contrato, financeiro, concorrência e BI." },
+const workflow = [
+  ["01", "Captar", "Monitoramento automático nas fontes públicas."],
+  ["02", "Analisar", "Score, aderência, risco, prazo e valor estimado."],
+  ["03", "Organizar", "Responsáveis, tarefas, documentos e aprovações."],
+  ["04", "Participar", "Proposta, pregão, recursos e homologação."],
+  ["05", "Executar", "Contrato, ata, financeiro, fiscalização e BI."],
 ];
 
 const security = [
-  { icon: ShieldCheck, title: "Auditoria", text: "Registro de ações, alterações, acessos e integrações." },
-  { icon: LockKeyhole, title: "Controle de acesso", text: "Perfis, permissões granulares e sessões seguras." },
-  { icon: Building2, title: "Multiempresa", text: "Vários CNPJs com operação centralizada." },
-  { icon: Scale, title: "Lei 14.133/2021", text: "Rotina alinhada ao ciclo moderno de compras públicas." },
+  { icon: ShieldCheck, title: "Auditoria completa", text: "Registro de ações, alterações, acessos e integrações." },
+  { icon: LockKeyhole, title: "Permissões granulares", text: "Controle por perfil, módulo, operação e empresa." },
+  { icon: BellRing, title: "Alertas operacionais", text: "Prazos, certidões, mensagens, documentos e movimentações." },
+  { icon: Scale, title: "Base para Lei 14.133/2021", text: "Organização do ciclo de contratação pública de ponta a ponta." },
 ];
+
+function scoreClass(tone: string) {
+  if (tone === "blue") return "bg-blue-50 text-blue-700 ring-blue-100";
+  if (tone === "amber") return "bg-amber-50 text-amber-700 ring-amber-100";
+  return "bg-emerald-50 text-emerald-700 ring-emerald-100";
+}
 
 export default function HomePage() {
   return (
-    <main className="min-h-screen overflow-hidden bg-[#f7fbff] text-slate-950">
-      <section className="relative isolate">
-        <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_15%_10%,rgba(20,184,166,0.18),transparent_30%),radial-gradient(circle_at_85%_0%,rgba(59,130,246,0.16),transparent_34%),linear-gradient(180deg,#ffffff_0%,#f7fbff_48%,#eef7ff_100%)]" />
-        <div className="absolute inset-x-0 top-0 -z-10 h-24 border-b border-slate-200/70 bg-white/70 backdrop-blur-xl" />
-
-        <header className="mx-auto flex h-24 w-full max-w-7xl items-center justify-between px-5 sm:px-6 lg:px-8">
-          <Link href="/" aria-label="GOV360" className="flex items-center">
-            <BrandLogo priority className="mx-0 max-w-[132px] sm:max-w-[156px]" />
+    <main className="min-h-screen bg-slate-50 text-slate-900">
+      <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/90 backdrop-blur">
+        <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+          <Link href="/" aria-label="GOV360">
+            <BrandLogo priority className="mx-0 max-w-[128px] sm:max-w-[150px]" />
           </Link>
 
-          <nav className="hidden items-center gap-8 rounded-full border border-slate-200 bg-white/80 px-6 py-3 text-sm font-semibold text-slate-600 shadow-sm backdrop-blur lg:flex">
-            <a href="#plataforma" className="hover:text-emerald-700">Plataforma</a>
+          <nav className="hidden items-center gap-6 text-sm font-semibold text-slate-600 lg:flex">
+            <a href="#modulos" className="hover:text-emerald-700">Módulos</a>
             <a href="#fontes" className="hover:text-emerald-700">Fontes</a>
-            <a href="#inteligencia" className="hover:text-emerald-700">Inteligência</a>
+            <a href="#fluxo" className="hover:text-emerald-700">Operação</a>
             <a href="#seguranca" className="hover:text-emerald-700">Segurança</a>
           </nav>
 
-          <Button asChild className="rounded-full bg-slate-950 px-5 font-bold text-white shadow-lg shadow-slate-900/10 hover:bg-slate-800">
-            <Link href="/login">Entrar</Link>
-          </Button>
-        </header>
+          <div className="flex items-center gap-2">
+            <Button asChild variant="outline" className="hidden rounded-full border-slate-300 bg-white font-semibold sm:inline-flex">
+              <Link href="/dashboard/oportunidades">Oportunidades</Link>
+            </Button>
+            <Button asChild className="rounded-full bg-emerald-700 font-semibold text-white hover:bg-emerald-800">
+              <Link href="/login">Acessar</Link>
+            </Button>
+          </div>
+        </div>
+      </header>
 
-        <div className="mx-auto grid max-w-7xl items-center gap-10 px-5 pb-16 pt-10 sm:px-6 lg:grid-cols-[1.02fr_0.98fr] lg:px-8 lg:pb-24 lg:pt-20">
-          <div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-bold text-emerald-800 shadow-sm">
-              <Sparkles className="h-4 w-4" />
-              Inteligência, gestão e automação para vender ao governo
+      <section className="border-b border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_55%,#eef7f4_100%)]">
+        <div className="mx-auto grid max-w-7xl gap-8 px-4 py-10 sm:px-6 sm:py-14 lg:grid-cols-[0.95fr_1.05fr] lg:px-8 lg:py-16">
+          <div className="flex min-w-0 flex-col justify-center">
+            <div className="inline-flex w-fit items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-emerald-800">
+              <Landmark className="h-4 w-4" />
+              Plataforma corporativa de licitações públicas
             </div>
 
-            <h1 className="mt-7 max-w-4xl text-4xl font-black leading-[1.02] tracking-[-0.045em] text-slate-950 sm:text-6xl lg:text-7xl">
-              Licitações públicas com clareza, controle e inteligência de mercado.
+            <h1 className="mt-5 max-w-3xl text-3xl font-black leading-tight tracking-tight text-slate-950 sm:text-4xl lg:text-5xl">
+              Gestão inteligente para captar, analisar e vencer licitações com controle.
             </h1>
 
-            <p className="mt-6 max-w-2xl text-base leading-8 text-slate-600 sm:text-xl">
-              O GOV360 centraliza oportunidades, editais, propostas, documentos, pregões, contratos,
-              concorrentes e indicadores em uma plataforma proprietária para operação corporativa.
+            <p className="mt-5 max-w-2xl text-base leading-7 text-slate-600 sm:text-lg">
+              O GOV360 organiza oportunidades, editais, documentos, propostas, pregões, contratos,
+              financeiro, mercado e concorrentes em um ambiente único, proprietário e seguro.
             </p>
 
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Button asChild size="lg" className="h-12 rounded-full bg-emerald-600 px-7 font-black text-white shadow-xl shadow-emerald-600/20 hover:bg-emerald-700">
+            <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+              <Button asChild size="lg" className="rounded-full bg-emerald-700 px-6 font-bold text-white hover:bg-emerald-800">
                 <Link href="/login">
-                  Acessar plataforma
+                  Entrar na plataforma
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
-              <Button asChild size="lg" variant="outline" className="h-12 rounded-full border-slate-300 bg-white px-7 font-bold text-slate-800 shadow-sm hover:bg-slate-50">
-                <Link href="/dashboard/oportunidades">Ver oportunidades</Link>
+              <Button asChild size="lg" variant="outline" className="rounded-full border-slate-300 bg-white px-6 font-bold text-slate-800">
+                <Link href="/dashboard">Ver dashboard</Link>
               </Button>
             </div>
 
-            <div className="mt-9 grid grid-cols-2 gap-3 sm:max-w-2xl lg:grid-cols-4">
-              {stats.map(([value, label]) => (
-                <div key={label} className="rounded-3xl border border-slate-200 bg-white/85 p-4 shadow-sm shadow-slate-200/60 backdrop-blur">
-                  <div className="text-2xl font-black tracking-tight text-slate-950">{value}</div>
-                  <div className="mt-1 text-xs font-medium leading-5 text-slate-500">{label}</div>
+            <div className="mt-8 grid grid-cols-2 gap-3 sm:max-w-2xl lg:grid-cols-4">
+              {indicators.map((item) => (
+                <div key={item.label} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                  <p className="text-xl font-black text-slate-950">{item.value}</p>
+                  <p className="mt-1 text-xs leading-5 text-slate-500">{item.label}</p>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="relative">
-            <div className="absolute -inset-6 rounded-[2.5rem] bg-gradient-to-br from-emerald-300/35 via-blue-300/20 to-white blur-2xl" />
-            <div className="relative overflow-hidden rounded-[2rem] border border-white bg-white p-3 shadow-2xl shadow-slate-300/60">
-              <div className="rounded-[1.6rem] border border-slate-200 bg-slate-50">
-                <div className="flex flex-col gap-4 border-b border-slate-200 bg-white p-5 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <p className="text-xs font-black uppercase tracking-[0.28em] text-emerald-700">Painel GOV360</p>
-                    <h2 className="mt-1 text-xl font-black text-slate-950">Radar nacional de oportunidades</h2>
-                  </div>
-                  <span className="w-fit rounded-full bg-red-50 px-3 py-1 text-xs font-black text-red-700 ring-1 ring-red-100">Fervendo</span>
+          <div className="min-w-0 rounded-3xl border border-slate-200 bg-white p-3 shadow-xl shadow-slate-200/70 sm:p-4">
+            <div className="overflow-hidden rounded-2xl border border-slate-200">
+              <div className="flex flex-col gap-3 border-b border-slate-200 bg-slate-950 p-4 text-white sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-[0.22em] text-emerald-300">Consulta de licitações</p>
+                  <h2 className="mt-1 text-base font-black sm:text-lg">Oportunidades priorizadas por aderência</h2>
                 </div>
+                <div className="flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-xs font-bold">
+                  <MapPinned className="h-4 w-4 text-emerald-300" />
+                  Mapa nacional ativo
+                </div>
+              </div>
 
-                <div className="grid gap-4 p-4 sm:p-5">
-                  <div className="grid gap-3 sm:grid-cols-3">
-                    {[
-                      ["Alta aderência", "37", "bg-emerald-50 text-emerald-700"],
-                      ["Prazo crítico", "12", "bg-amber-50 text-amber-700"],
-                      ["Valor forte", "R$ 8,9 mi", "bg-blue-50 text-blue-700"],
-                    ].map(([label, value, color]) => (
-                      <div key={label} className="rounded-2xl border border-slate-200 bg-white p-4">
-                        <p className="text-xs font-semibold text-slate-500">{label}</p>
-                        <p className={`mt-2 rounded-xl px-3 py-2 text-lg font-black ${color}`}>{value}</p>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="grid gap-4 lg:grid-cols-[0.95fr_1.05fr]">
-                    <div className="rounded-3xl border border-slate-200 bg-white p-4">
-                      <div className="mb-4 flex items-center gap-2 text-sm font-black text-slate-800">
-                        <MapPinned className="h-4 w-4 text-emerald-600" />
-                        Mapa por UF
-                      </div>
-                      <div className="grid grid-cols-4 gap-2 text-xs font-black sm:grid-cols-5">
-                        {["AM", "PA", "CE", "BA", "GO", "MG", "SP", "RJ", "PR", "RS"].map((uf, index) => (
-                          <div
-                            key={uf}
-                            className={`flex h-11 items-center justify-center rounded-2xl ${
-                              index % 4 === 0
-                                ? "bg-red-100 text-red-700"
-                                : index % 3 === 0
-                                  ? "bg-amber-100 text-amber-700"
-                                  : "bg-emerald-100 text-emerald-700"
-                            }`}
-                          >
-                            {uf}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="space-y-3">
-                      {[
-                        ["PNCP", "Pregão eletrônico", "R$ 2.177.000,00"],
-                        ["Compras.gov", "Registro de preço", "R$ 860.400,00"],
-                        ["DOU", "Publicação nova", "Monitorar edital"],
-                      ].map(([source, mode, value]) => (
-                        <div key={`${source}-${mode}`} className="rounded-3xl border border-slate-200 bg-white p-4">
-                          <div className="flex items-start justify-between gap-3">
-                            <div>
-                              <p className="font-black text-slate-950">{mode}</p>
-                              <p className="mt-1 text-xs font-semibold text-slate-500">{source} · {value}</p>
-                            </div>
-                            <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-black text-emerald-700">Score alto</span>
-                          </div>
+              <div className="grid gap-3 bg-slate-50 p-3 sm:p-4">
+                {opportunities.map((item) => (
+                  <article key={`${item.source}-${item.title}`} className="rounded-2xl border border-slate-200 bg-white p-4">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-700">{item.source}</span>
+                          <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-700">{item.modality}</span>
                         </div>
-                      ))}
+                        <h3 className="mt-3 text-sm font-black leading-6 text-slate-950 sm:text-base">{item.title}</h3>
+                        <p className="mt-1 text-sm text-slate-500">{item.agency}</p>
+                      </div>
+                      <span className={`w-fit rounded-full px-3 py-1 text-xs font-black ring-1 ${scoreClass(item.tone)}`}>{item.score}</span>
                     </div>
-                  </div>
-                </div>
+
+                    <div className="mt-4 grid gap-2 text-sm sm:grid-cols-3">
+                      <div className="rounded-xl bg-slate-50 p-3">
+                        <p className="text-xs font-semibold text-slate-500">Abertura</p>
+                        <p className="mt-1 font-bold text-slate-900">{item.date}</p>
+                      </div>
+                      <div className="rounded-xl bg-slate-50 p-3 sm:col-span-2">
+                        <p className="text-xs font-semibold text-slate-500">Valor estimado</p>
+                        <p className="mt-1 font-bold text-slate-900">{item.value}</p>
+                      </div>
+                    </div>
+                  </article>
+                ))}
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      <section id="plataforma" className="bg-white py-16 sm:py-24">
-        <div className="mx-auto max-w-7xl px-5 sm:px-6 lg:px-8">
-          <div className="mx-auto max-w-3xl text-center">
-            <p className="text-sm font-black uppercase tracking-[0.28em] text-emerald-700">Plataforma completa</p>
-            <h2 className="mt-4 text-3xl font-black tracking-tight sm:text-5xl">Tudo que a equipe precisa antes, durante e depois da disputa.</h2>
-            <p className="mt-5 text-lg leading-8 text-slate-600">Uma operação mais visual, menos manual e muito mais segura para transformar dados públicos em receita.</p>
+      <section id="modulos" className="bg-white py-14 sm:py-18 lg:py-20">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="max-w-3xl">
+            <p className="text-xs font-black uppercase tracking-[0.24em] text-emerald-700">Módulos principais</p>
+            <h2 className="mt-3 text-2xl font-black tracking-tight sm:text-3xl lg:text-4xl">
+              Uma plataforma para a rotina real de quem vende para o governo.
+            </h2>
+            <p className="mt-4 leading-7 text-slate-600">
+              Nada solto: oportunidade, edital, documento, proposta, disputa, contrato e financeiro conectados no mesmo processo.
+            </p>
           </div>
 
-          <div className="mt-12 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-9 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {modules.map((module) => {
               const Icon = module.icon;
               return (
-                <div key={module.title} className="group rounded-[2rem] border border-slate-200 bg-gradient-to-br from-white to-slate-50 p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-xl hover:shadow-slate-200/70">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100">
-                    <Icon className="h-6 w-6" />
+                <div key={module.title} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700">
+                    <Icon className="h-5 w-5" />
                   </div>
-                  <h3 className="mt-5 text-xl font-black">{module.title}</h3>
-                  <p className="mt-3 leading-7 text-slate-600">{module.text}</p>
+                  <h3 className="mt-4 font-black text-slate-950">{module.title}</h3>
+                  <p className="mt-2 text-sm leading-6 text-slate-600">{module.text}</p>
                 </div>
               );
             })}
@@ -219,128 +248,109 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section id="fontes" className="bg-[#eef7ff] py-16 sm:py-24">
-        <div className="mx-auto grid max-w-7xl gap-10 px-5 sm:px-6 lg:grid-cols-[0.9fr_1.1fr] lg:px-8">
+      <section id="fontes" className="border-y border-slate-200 bg-slate-50 py-14 sm:py-18 lg:py-20">
+        <div className="mx-auto grid max-w-7xl gap-8 px-4 sm:px-6 lg:grid-cols-[0.9fr_1.1fr] lg:px-8">
           <div>
-            <p className="text-sm font-black uppercase tracking-[0.28em] text-blue-700">Dados oficiais</p>
-            <h2 className="mt-4 text-3xl font-black tracking-tight sm:text-5xl">Fontes públicas organizadas para decisão comercial.</h2>
-            <p className="mt-5 text-lg leading-8 text-slate-600">
-              O GOV360 foi pensado para conectar APIs, dados abertos, diários oficiais, contratos, sanções e histórico de compras.
+            <p className="text-xs font-black uppercase tracking-[0.24em] text-blue-700">Integrações e dados públicos</p>
+            <h2 className="mt-3 text-2xl font-black tracking-tight sm:text-3xl lg:text-4xl">
+              Dados oficiais organizados para análise rápida.
+            </h2>
+            <p className="mt-4 leading-7 text-slate-600">
+              A base do GOV360 foi desenhada para consumir oportunidades, contratos, sanções, publicações oficiais e histórico de compras.
             </p>
           </div>
+
           <div className="grid gap-3 sm:grid-cols-2">
             {sources.map((source) => (
-              <div key={source} className="flex items-center gap-3 rounded-3xl border border-blue-100 bg-white p-4 shadow-sm">
-                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-50 text-blue-700">
-                  <DatabaseZap className="h-5 w-5" />
+              <div key={source} className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
+                  <Database className="h-5 w-5" />
                 </div>
-                <span className="font-black text-slate-800">{source}</span>
+                <span className="text-sm font-black text-slate-800">{source}</span>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      <section id="inteligencia" className="bg-white py-16 sm:py-24">
-        <div className="mx-auto grid max-w-7xl gap-10 px-5 sm:px-6 lg:grid-cols-[1fr_0.9fr] lg:px-8">
-          <div>
-            <p className="text-sm font-black uppercase tracking-[0.28em] text-emerald-700">Jornada operacional</p>
-            <h2 className="mt-4 text-3xl font-black tracking-tight sm:text-5xl">Menos improviso. Mais método, prioridade e previsibilidade.</h2>
-            <div className="mt-8 grid gap-4 sm:grid-cols-2">
-              {journey.map((step) => {
-                const Icon = step.icon;
-                return (
-                  <div key={step.title} className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
-                    <Icon className="h-6 w-6 text-emerald-700" />
-                    <h3 className="mt-4 text-lg font-black">{step.title}</h3>
-                    <p className="mt-2 leading-7 text-slate-600">{step.text}</p>
-                  </div>
-                );
-              })}
+      <section id="fluxo" className="bg-white py-14 sm:py-18 lg:py-20">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="grid gap-8 lg:grid-cols-[0.82fr_1.18fr]">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.24em] text-emerald-700">Operação guiada</p>
+              <h2 className="mt-3 text-2xl font-black tracking-tight sm:text-3xl lg:text-4xl">
+                Do radar ao contrato, cada etapa tem dono, prazo e evidência.
+              </h2>
+              <p className="mt-4 leading-7 text-slate-600">
+                O time acompanha o ciclo licitatório em uma linha simples, com alertas e histórico completo.
+              </p>
             </div>
-          </div>
 
-          <div className="rounded-[2rem] bg-slate-950 p-6 text-white shadow-2xl shadow-slate-300/70">
-            <p className="text-xs font-black uppercase tracking-[0.28em] text-emerald-300">BI Executivo</p>
-            <h3 className="mt-3 text-3xl font-black">Indicadores vivos para diretoria.</h3>
-            <div className="mt-8 space-y-5">
-              {[
-                ["Taxa de sucesso", "68%", "w-[68%]", "bg-emerald-400"],
-                ["Valor homologado", "R$ 18,4 mi", "w-[82%]", "bg-blue-400"],
-                ["Documentos válidos", "94%", "w-[94%]", "bg-amber-300"],
-                ["Prazos críticos tratados", "31", "w-[56%]", "bg-red-400"],
-              ].map(([label, value, width, color]) => (
-                <div key={label}>
-                  <div className="mb-2 flex justify-between text-sm">
-                    <span className="text-slate-300">{label}</span>
-                    <span className="font-black">{value}</span>
-                  </div>
-                  <div className="h-3 overflow-hidden rounded-full bg-white/10">
-                    <div className={`h-full rounded-full ${color} ${width}`} />
+            <div className="grid gap-3">
+              {workflow.map(([number, title, text]) => (
+                <div key={number} className="flex gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                  <div className="flex h-10 w-10 flex-none items-center justify-center rounded-xl bg-slate-950 text-sm font-black text-white">{number}</div>
+                  <div>
+                    <h3 className="font-black text-slate-950">{title}</h3>
+                    <p className="mt-1 text-sm leading-6 text-slate-600">{text}</p>
                   </div>
                 </div>
               ))}
             </div>
-            <div className="mt-8 rounded-3xl border border-emerald-300/20 bg-emerald-300/10 p-5">
-              <p className="leading-7 text-emerald-50">
-                Mapa de oportunidades, ranking de órgãos, fornecedores vencedores, preços públicos, contratos ativos e produtividade da equipe.
-              </p>
-            </div>
           </div>
         </div>
       </section>
 
-      <section id="seguranca" className="bg-slate-950 py-16 text-white sm:py-24">
-        <div className="mx-auto max-w-7xl px-5 sm:px-6 lg:px-8">
-          <div className="grid gap-10 lg:grid-cols-[0.85fr_1.15fr]">
-            <div>
-              <p className="text-sm font-black uppercase tracking-[0.28em] text-emerald-300">Sistema proprietário</p>
-              <h2 className="mt-4 text-3xl font-black tracking-tight sm:text-5xl">Controle total sobre dados, acesso e operação.</h2>
-              <p className="mt-5 text-lg leading-8 text-slate-300">
-                O GOV360 não é um SaaS genérico: é uma base operacional para a organização controlar integrações, rotinas, segurança e inteligência.
-              </p>
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              {security.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <div key={item.title} className="rounded-3xl border border-white/10 bg-white/[0.04] p-5">
-                    <Icon className="h-6 w-6 text-emerald-300" />
-                    <h3 className="mt-4 font-black">{item.title}</h3>
-                    <p className="mt-2 leading-7 text-slate-400">{item.text}</p>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="bg-white px-5 py-16 sm:px-6 sm:py-24 lg:px-8">
-        <div className="mx-auto max-w-5xl overflow-hidden rounded-[2rem] bg-gradient-to-br from-emerald-600 to-blue-700 p-1 shadow-2xl shadow-blue-200">
-          <div className="rounded-[1.8rem] bg-white/95 p-8 text-center backdrop-blur sm:p-12">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700">
-              <Landmark className="h-7 w-7" />
-            </div>
-            <h2 className="mt-6 text-3xl font-black tracking-tight sm:text-5xl">Transforme licitação pública em operação previsível e lucrativa.</h2>
-            <p className="mx-auto mt-5 max-w-2xl text-lg leading-8 text-slate-600">
-              Capte antes, analise melhor, participe com controle, acompanhe contratos e decida com dados reais.
+      <section id="seguranca" className="bg-slate-950 py-14 text-white sm:py-18 lg:py-20">
+        <div className="mx-auto grid max-w-7xl gap-8 px-4 sm:px-6 lg:grid-cols-[0.9fr_1.1fr] lg:px-8">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.24em] text-emerald-300">Governança</p>
+            <h2 className="mt-3 text-2xl font-black tracking-tight sm:text-3xl lg:text-4xl">
+              Sistema proprietário, seguro e preparado para operação corporativa.
+            </h2>
+            <p className="mt-4 leading-7 text-slate-300">
+              Controle de acesso, auditoria, alertas, multiempresa e segurança para dados sensíveis da operação pública.
             </p>
-            <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-              <Button asChild size="lg" className="h-12 rounded-full bg-slate-950 px-8 font-black text-white hover:bg-slate-800">
-                <Link href="/login">Entrar no GOV360</Link>
-              </Button>
-              <Button asChild size="lg" variant="outline" className="h-12 rounded-full border-slate-300 px-8 font-black">
-                <Link href="/dashboard">Ver dashboard</Link>
-              </Button>
-            </div>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            {security.map((item) => {
+              const Icon = item.icon;
+              return (
+                <div key={item.title} className="rounded-2xl border border-white/10 bg-white/[0.04] p-5">
+                  <Icon className="h-5 w-5 text-emerald-300" />
+                  <h3 className="mt-4 font-black">{item.title}</h3>
+                  <p className="mt-2 text-sm leading-6 text-slate-400">{item.text}</p>
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>
 
-      <footer className="border-t border-slate-200 bg-white px-5 py-8 text-sm text-slate-500 sm:px-6 lg:px-8">
+      <section className="bg-white px-4 py-14 sm:px-6 sm:py-18 lg:px-8 lg:py-20">
+        <div className="mx-auto max-w-5xl rounded-3xl border border-emerald-100 bg-gradient-to-br from-emerald-50 via-white to-blue-50 p-6 text-center shadow-sm sm:p-10">
+          <CalendarClock className="mx-auto h-9 w-9 text-emerald-700" />
+          <h2 className="mx-auto mt-4 max-w-3xl text-2xl font-black tracking-tight sm:text-3xl lg:text-4xl">
+            Menos perda de prazo, mais controle e decisões comerciais melhores.
+          </h2>
+          <p className="mx-auto mt-4 max-w-2xl leading-7 text-slate-600">
+            Transforme dados públicos em uma operação previsível para participar, vencer, contratar e medir resultado.
+          </p>
+          <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
+            <Button asChild size="lg" className="rounded-full bg-emerald-700 px-7 font-bold text-white hover:bg-emerald-800">
+              <Link href="/login">Acessar GOV360</Link>
+            </Button>
+            <Button asChild size="lg" variant="outline" className="rounded-full border-slate-300 bg-white px-7 font-bold">
+              <Link href="/dashboard/oportunidades">Abrir oportunidades</Link>
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      <footer className="border-t border-slate-200 bg-white px-4 py-8 text-sm text-slate-500 sm:px-6 lg:px-8">
         <div className="mx-auto flex max-w-7xl flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <BrandLogo className="mx-0 max-w-[118px]" />
+          <BrandLogo className="mx-0 max-w-[112px]" />
           <p>GOV360 — inteligência, gestão e automação para licitações públicas.</p>
         </div>
       </footer>
