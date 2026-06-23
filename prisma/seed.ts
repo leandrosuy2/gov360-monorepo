@@ -1,7 +1,10 @@
+import { PrismaMariaDb } from "@prisma/adapter-mariadb";
 import { PrismaClient, PortalType } from "@prisma/client";
 import * as bcrypt from "bcrypt";
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({
+  adapter: new PrismaMariaDb(process.env.DATABASE_URL ?? ""),
+});
 
 const PORTALS = [
   { name: "Portal Nacional de Contratações Públicas", code: "PNCP", type: PortalType.FEDERAL, baseUrl: "https://pncp.gov.br" },

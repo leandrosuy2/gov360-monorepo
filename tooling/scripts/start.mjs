@@ -14,6 +14,7 @@ loadDotEnv(join(root, ".env"));
 const webPort = process.env.PORT ?? "3000";
 const apiPort = process.env.API_PORT ?? "3001";
 const children = [];
+let exiting = false;
 
 if (!existsSync(apiDist) || !existsSync(nextBuild)) {
   console.error("[gov360] Build ausente. Execute `node tooling/scripts/build.mjs` antes do start.");
@@ -26,6 +27,24 @@ if (missingEnv.length > 0) {
   console.error("[gov360] Configure essas variáveis no ambiente do deploy ou forneça um arquivo .env na raiz do projeto.");
   process.exit(1);
 }
+
+const api = run("api", process.execPath, [apiDist], apiDir);
+
+setTimeout(() => {
+  if (!exiting && api.exitCode === null && !api.killed) {
+    run("web", process.execPath, [nextRunner, "start", "-H", "0.0.0.0", "-p", webPort], webDir);
+  }
+}, 1200);
+
+process.on("SIGTERM", () => {
+  shutdown();
+  process.exit(143);
+});
+
+process.on("SIGINT", () => {
+  shutdown();
+  process.exit(130);
+});
 
 function run(label, command, args, cwd) {
   const child = spawn(command, args, {
@@ -41,13 +60,11 @@ function run(label, command, args, cwd) {
   });
 
   child.on("exit", (code, signal) => {
-    if (signal) return;
+    if (exiting || signal) return;
     if (code !== 0 && code !== null) {
       console.error(`[${label}] encerrou com código ${code}`);
-      for (const other of children) {
-        if (other !== child && !other.killed) other.kill();
-      }
-      process.exit(code);
+      shutdown(child);
+      setTimeout(() => process.exit(code), 300);
     }
   });
 
@@ -55,17 +72,12 @@ function run(label, command, args, cwd) {
   return child;
 }
 
-function shutdown() {
+function shutdown(except) {
+  exiting = true;
   for (const child of children) {
-    if (!child.killed) child.kill();
+    if (child !== except && !child.killed) child.kill();
   }
 }
-
-process.on("SIGTERM", shutdown);
-process.on("SIGINT", shutdown);
-
-run("api", process.execPath, [apiDist], apiDir);
-run("web", process.execPath, [nextRunner, "start", "-H", "0.0.0.0", "-p", webPort], webDir);
 
 function loadDotEnv(filePath) {
   if (!existsSync(filePath)) return;
