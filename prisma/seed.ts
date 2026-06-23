@@ -1,9 +1,16 @@
 import { PrismaMariaDb } from "@prisma/adapter-mariadb";
 import { PrismaClient, PortalType } from "@prisma/client";
 import * as bcrypt from "bcrypt";
+import "dotenv/config";
+
+function databaseUrl() {
+  const url = (process.env.DATABASE_URL ?? "").replace(/^mysql:\/\//, "mariadb://");
+  if (!url || url.includes("allowPublicKeyRetrieval=")) return url;
+  return `${url}${url.includes("?") ? "&" : "?"}allowPublicKeyRetrieval=true`;
+}
 
 const prisma = new PrismaClient({
-  adapter: new PrismaMariaDb(process.env.DATABASE_URL ?? ""),
+  adapter: new PrismaMariaDb(databaseUrl()),
 });
 
 const PORTALS = [
