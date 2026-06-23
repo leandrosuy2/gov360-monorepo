@@ -1,13 +1,15 @@
 import { existsSync, readFileSync } from "node:fs";
-import { spawn } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import { join } from "node:path";
 
 const root = join(import.meta.dirname, "../..");
 const apiDir = join(root, "apps/api");
 const webDir = join(root, "apps/web");
 const apiDist = join(apiDir, "dist/main.js");
+const apiPrismaDist = join(apiDir, "dist/prisma/prisma.service.js");
 const nextBuild = join(webDir, ".next/BUILD_ID");
 const nextRunner = join(root, "tooling/scripts/run-next.mjs");
+const nestRunner = join(root, "tooling/scripts/run-nest.mjs");
 
 loadDotEnv(join(root, ".env"));
 
@@ -16,8 +18,10 @@ const apiPort = process.env.API_PORT ?? "3001";
 const children = [];
 let exiting = false;
 
+ensureApiBuildIsCurrent();
+
 if (!existsSync(apiDist) || !existsSync(nextBuild)) {
-  console.error("[gov360] Build ausente. Execute `node tooling/scripts/build.mjs` antes do start.");
+  console.error("[gov360] Build ausente. Execute `pnpm build` uma vez antes do start.");
   process.exit(1);
 }
 
@@ -45,6 +49,35 @@ process.on("SIGINT", () => {
   shutdown();
   process.exit(130);
 });
+
+function ensureApiBuildIsCurrent() {
+  if (apiDistLooksCurrent()) return;
+
+  console.log("[gov360] API compilada desatualizada. Recompilando somente a API...");
+
+  const result = spawnSync(process.execPath, [nestRunner, "build"], {
+    cwd: apiDir,
+    stdio: "inherit",
+    shell: false,
+    env: {
+      ...process.env,
+      NODE_ENV: "development",
+      CI: "false",
+    },
+  });
+
+  if (result.status !== 0) {
+    console.error("[gov360] Falha ao recompilar a API. Execute `pnpm --filter @gov360/api build` e tente novamente.");
+    process.exit(result.status ?? 1);
+  }
+}
+
+function apiDistLooksCurrent() {
+  if (!existsSync(apiDist) || !existsSync(apiPrismaDist)) return false;
+
+  const compiledPrismaService = readFileSync(apiPrismaDist, "utf8");
+  return compiledPrismaService.includes("PrismaMariaDb") && compiledPrismaService.includes("adapter:");
+}
 
 function run(label, command, args, cwd) {
   const child = spawn(command, args, {
