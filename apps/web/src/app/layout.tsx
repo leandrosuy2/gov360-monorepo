@@ -6,10 +6,11 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: {
-    default: "Gov360 — Licitações Públicas",
-    template: "%s | Gov360",
+    default: "GOV360 — Inteligência em Licitações Públicas",
+    template: "%s | GOV360",
   },
-  description: "Plataforma de inteligência, gestão e automação de licitações públicas",
+  description:
+    "Plataforma proprietária de inteligência, gestão e automação para licitações públicas, contratos, mercado e BI executivo.",
   icons: {
     icon: "/favicon.png",
     shortcut: "/favicon.png",
