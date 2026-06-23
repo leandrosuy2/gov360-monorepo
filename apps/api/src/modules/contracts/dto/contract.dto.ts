@@ -1,3 +1,4 @@
+// contracts DTO with enum import
 import { ContractStatus } from "@prisma/client";
 import { IsDateString, IsEnum, IsNumber, IsOptional, IsString } from "class-validator";
 

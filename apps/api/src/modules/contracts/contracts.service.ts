@@ -41,26 +41,32 @@ export class ContractsService {
   }
 
   async create(dto: CreateContractDto) {
-    const contract = await this.prisma.contract.create({
-      data: {
-        ...dto,
-        signedAt: dto.signedAt ? new Date(dto.signedAt) : undefined,
-        startsAt: dto.startsAt ? new Date(dto.startsAt) : undefined,
-        endsAt: dto.endsAt ? new Date(dto.endsAt) : undefined,
-      },
-    });
+    const { status, ...rest } = dto;
+    const data: Prisma.ContractCreateInput = {
+      ...rest,
+      signedAt: dto.signedAt ? new Date(dto.signedAt) : undefined,
+      startsAt: dto.startsAt ? new Date(dto.startsAt) : undefined,
+      endsAt: dto.endsAt ? new Date(dto.endsAt) : undefined,
+    };
+    if (status) {
+      // Cast string to ContractStatus enum; assume validation ensures correct values
+      (data as any).status = status as any;
+    }
+    const contract = await this.prisma.contract.create({ data });
     return serializeDates(contract);
   }
 
   async update(id: string, dto: UpdateContractDto) {
     await this.findOne(id);
-    const contract = await this.prisma.contract.update({
-      where: { id },
-      data: {
-        ...dto,
-        endsAt: dto.endsAt ? new Date(dto.endsAt) : undefined,
-      },
-    });
+    const { status, ...rest } = dto;
+    const data: Prisma.ContractUpdateInput = {
+      ...rest,
+      endsAt: dto.endsAt ? new Date(dto.endsAt) : undefined,
+    };
+    if (status) {
+      (data as any).status = status as any;
+    }
+    const contract = await this.prisma.contract.update({ where: { id }, data });
     return serializeDates(contract);
   }
 }

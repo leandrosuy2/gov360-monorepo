@@ -1,5 +1,5 @@
-import { DocumentCategory } from "@prisma/client";
-import { IsDateString, IsEnum, IsNumber, IsOptional, IsString } from "class-validator";
+// Updated imports without DocumentCategory enum
+import { IsDateString, IsNumber, IsOptional, IsString } from "class-validator";
 
 export class CreateDocumentDto {
   @IsString()
@@ -29,16 +29,12 @@ export class CreateDocumentDto {
   @IsOptional()
   @IsDateString()
   expiresAt?: string;
-
-  @IsOptional()
-  @IsString()
-  tenderId?: string;
 }
 
 export class UpdateDocumentDto {
   @IsOptional()
   @IsString()
-  name?: string;
+  tenderId?: string;
 
   @IsOptional()
   @IsString()

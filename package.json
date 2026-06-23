@@ -24,7 +24,8 @@
   },
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",
-    "husky": "^9.1.7",
+        "@types/dotenv": "^10.0.0",
+
     "turbo": "^2.5.4",
     "typescript": "^5.8.3"
   },

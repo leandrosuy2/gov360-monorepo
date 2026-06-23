@@ -3,10 +3,10 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint",
+    "dev": "pnpm exec next dev",
+    "build": "pnpm exec next build",
+    "start": "pnpm exec next start",
+    "lint": "pnpm exec next lint",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

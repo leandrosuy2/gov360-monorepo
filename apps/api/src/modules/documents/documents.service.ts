@@ -55,19 +55,33 @@ export class DocumentsService {
 
   async create(dto: CreateDocumentDto) {
     const status = dto.expiresAt ? computeDocumentStatus(new Date(dto.expiresAt)) : "PENDING_REVIEW";
-    const doc = await this.prisma.document.create({
-      data: { ...dto, status, issuedAt: dto.issuedAt ? new Date(dto.issuedAt) : undefined, expiresAt: dto.expiresAt ? new Date(dto.expiresAt) : undefined },
-    });
+    const { category, ...rest } = dto;
+    const data: Prisma.DocumentCreateInput = {
+      ...rest,
+      category: category as any,
+      status,
+      issuedAt: dto.issuedAt ? new Date(dto.issuedAt) : undefined,
+      expiresAt: dto.expiresAt ? new Date(dto.expiresAt) : undefined,
+    };
+    const doc = await this.prisma.document.create({ data });
     return serializeDates(doc);
   }
 
   async update(id: string, dto: UpdateDocumentDto) {
     await this.findOne(id);
+    const { category, tenderId, ...rest } = dto;
     const expiresAt = dto.expiresAt ? new Date(dto.expiresAt) : undefined;
     const status = expiresAt ? computeDocumentStatus(expiresAt) : undefined;
+    const data: Prisma.DocumentUpdateInput = {
+      ...rest,
+      ...(category ? { category: category as any } : {}),
+      expiresAt,
+      status,
+      issuedAt: dto.issuedAt ? new Date(dto.issuedAt) : undefined,
+    };
     const doc = await this.prisma.document.update({
       where: { id },
-      data: { ...dto, expiresAt, status, issuedAt: dto.issuedAt ? new Date(dto.issuedAt) : undefined },
+      data,
     });
     return serializeDates(doc);
   }
