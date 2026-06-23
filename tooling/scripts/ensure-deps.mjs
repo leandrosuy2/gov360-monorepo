@@ -3,14 +3,22 @@ import { createRequire } from "node:module";
 import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { existsSync } from "node:fs";
+import { platform } from "node:os";
 
 const root = join(import.meta.dirname, "../..");
 const pnpmVersion = "9.15.9";
+const corepackHome = join(root, ".cache/corepack");
+const isWindows = platform() === "win32";
+const pnpmCommand = isWindows ? "pnpm.cmd" : "pnpm";
+const npxCommand = isWindows ? "npx.cmd" : "npx";
+const corepackCommand = isWindows ? "corepack.cmd" : "corepack";
 
 const requiredPackages = [
   { pkgJson: "apps/api/package.json", name: "@nestjs/common" },
   { pkgJson: "apps/api/package.json", name: "@nestjs/cli/bin/nest.js" },
+  { pkgJson: "apps/api/package.json", name: "@prisma/adapter-mariadb/package.json" },
   { pkgJson: "apps/api/package.json", name: "reflect-metadata" },
+  { pkgJson: "apps/api/package.json", name: "mariadb/package.json" },
   { pkgJson: "apps/api/package.json", name: "tsx" },
   { pkgJson: "apps/web/package.json", name: "next" },
   { pkgJson: "apps/web/package.json", name: "next/dist/bin/next" },
@@ -56,7 +64,9 @@ function run(command, args) {
       ...process.env,
       NODE_ENV: "development",
       CI: "false",
+      COREPACK_HOME: process.env.COREPACK_HOME ?? corepackHome,
     },
+    shell: isWindows,
   });
 }
 
@@ -65,15 +75,15 @@ function pnpmMissing(result) {
 }
 
 function installWithPnpm() {
-  run("corepack", ["enable"]);
+  run(corepackCommand, ["enable"]);
 
   const installArgs = ["install", "--no-frozen-lockfile", "--prod=false"];
 
-  let result = run("pnpm", installArgs);
+  let result = run(pnpmCommand, installArgs);
 
   if (pnpmMissing(result) || result.status !== 0) {
     console.log(`[gov360] Tentando pnpm@${pnpmVersion} via npx...`);
-    result = run("npx", ["--yes", `pnpm@${pnpmVersion}`, ...installArgs]);
+    result = run(npxCommand, ["--yes", `pnpm@${pnpmVersion}`, ...installArgs]);
   }
 
   return result;
